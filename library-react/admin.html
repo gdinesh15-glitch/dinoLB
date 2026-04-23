@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>VEMU LMS — Admin</title>
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+
+<body class="dash-body portal-admin">
+    <!-- Portal Background Animation -->
+    <div class="portal-bg" id="portalBg">
+        <div class="bg-orb"></div>
+        <div class="bg-orb"></div>
+        <div class="bg-orb"></div>
+    </div>
+    <div class="dash-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sb-top">
+                <div class="sb-logo"><img src="https://www.vemu.ac.in/assets/images/logo.png" alt="VEMU" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+                    <div class="sb-logo-fallback"><i class="fas fa-university"></i></div>
+                </div>
+                <div class="sb-brand"><span class="sb-college">VEMU</span><span class="sb-dept">Library System</span></div><button class="sb-close" onclick="closeSidebar()"><i class="fas fa-times"></i></button></div>
+            <div class="sb-user">
+                <div class="sb-avatar" id="sbAvatar">A</div>
+                <div class="sb-info">
+                    <div class="sb-name" id="sbName">Admin</div>
+                    <div class="sb-role-badge" id="sbRoleBadge">Administrator</div>
+                </div>
+                <div class="sb-online"></div>
+            </div>
+            <nav class="sb-nav">
+                <div class="sb-section">Main</div>
+                <a class="nav-link active" onclick="showSec('dashboard')"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                <a class="nav-link" onclick="showSec('quickActions')"><i class="fas fa-bolt"></i><span>Quick Actions</span></a>
+                <div class="sb-section">User Management</div>
+                <a class="nav-link" onclick="showSec('addLibrarian')"><i class="fas fa-user-tie"></i><span>Add Librarian</span></a>
+                <a class="nav-link" onclick="showSec('addFaculty')"><i class="fas fa-chalkboard-teacher"></i><span>Add Faculty</span></a>
+                <a class="nav-link" onclick="showSec('addStudent')"><i class="fas fa-user-graduate"></i><span>Add Student</span></a>
+                <a class="nav-link" onclick="showSec('allUsers')"><i class="fas fa-users"></i><span>All Users</span></a>
+                <div class="sb-section">Library</div>
+                <a class="nav-link" onclick="showSec('adminBooks')"><i class="fas fa-books"></i><span>View Books</span></a>
+                <a class="nav-link" onclick="showSec('adminBrowseBooks')"><i class="fas fa-search"></i><span>Browse Books</span></a>
+                <a class="nav-link" onclick="showSec('donations')"><i class="fas fa-hand-holding-heart"></i><span>Donations</span></a>
+                <div class="sb-section">Reports & Settings</div>
+                <a class="nav-link" onclick="showSec('activity')"><i class="fas fa-history"></i><span>Activity Log</span></a>
+                <a class="nav-link" onclick="showSec('systemSettings')"><i class="fas fa-cog"></i><span>System Settings</span></a>
+                <a class="nav-link" onclick="showSec('profile')"><i class="fas fa-user-circle"></i><span>Profile</span></a>
+                <a class="nav-link" onclick="showSec('settings')"><i class="fas fa-sliders-h"></i><span>Display Settings</span></a>
+            </nav>
+            <div class="sb-foot"><button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button></div>
+        </aside>
+        <div class="main-area">
+            <header class="topbar">
+                <div class="tb-l"><button class="hamburger" onclick="openSidebar()"><i class="fas fa-bars"></i></button>
+                    <div class="page-breadcrumb"><img src="https://www.vemu.ac.in/assets/images/logo.png" class="tb-logo" onerror="this.style.display='none'" /><span id="pageTitle">Dashboard</span></div>
+                </div>
+                <div class="tb-r">
+                    <div class="tb-clock"><i class="fas fa-clock"></i><span id="tbClock"></span></div><button class="tb-btn" onclick="toggleDark()"><i class="fas fa-moon" id="darkIcon"></i></button><button class="tb-btn notif-btn" onclick="toggleNotif()"><i class="fas fa-bell"></i><span class="notif-badge" id="notifBadge" style="display:none">0</span></button></div>
+            </header>
+            <div class="notif-panel" id="notifPanel">
+                <div class="np-head">
+                    <h4><i class="fas fa-bell"></i> Notifications</h4><button onclick="clearNotifs()">Clear All</button></div>
+                <div id="notifList"></div>
+            </div>
+            <div class="content-area">
+
+                <!-- ══ DASHBOARD ══ -->
+                <section class="sec active" id="sec-dashboard">
+                    <div class="sec-hd">
+                        <h2><i class="fas fa-th-large"></i> Admin Dashboard</h2>
+                        <div class="sec-date" id="secDate"></div>
+                    </div>
+                    <!-- Animated greeting -->
+                    <div id="adminGreeting"></div>
+                    <!-- Live info ticker -->
+                    <div class="lib-ticker" id="libTicker"></div>
+                    <!-- Campus banner -->
+                    <div class="vemu-banner">
+                        <img src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=1200&q=80&auto=format&fit=crop" class="banner-img" alt="VEMU Library" />
+                        <div class="banner-overlay">
+                            <h3>VEMU Institute of Technology</h3>
+                            <p>Central Library Management System — Administrator Panel</p><span class="banner-badge"><i class="fas fa-shield-alt"></i> Admin Access</span></div>
+                    </div>
+                    <div class="stats-row" id="adminStats"></div>
+                    <div class="dash-grid2" style="margin-top:16px">
+                        <div class="card">
+                            <div class="card-hd">
+                                <h3><i class="fas fa-users"></i> User Distribution</h3>
+                            </div>
+                            <div class="user-dist" id="userDist"></div>
+                        </div>
+                        <div class="card">
+                            <div class="card-hd">
+                                <h3><i class="fas fa-history"></i> Recent Activity</h3>
+                            </div>
+                            <div class="activity-list" id="dashActivity"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ══ QUICK ACTIONS ══ -->
+                <section class="sec" id="sec-quickActions">
+                    <div class="sec-hd">
+                        <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+                    </div>
+                    <div id="quickActionsContent"></div>
+                </section>
+
+                <!-- ══ ADD USERS ══ -->
+                <section class="sec" id="sec-addLibrarian">
+                    <div class="sec-hd">
+                        <h2><i class="fas fa-user-tie"></i> Add Librarian</h2>
+                    </div>
+                    <div class="form-card">
+                        <div class="form-grid" id="addLibForm"></div>
+                    </div>
+                </section>
+                <section class="sec" id="sec-addFaculty">
+                    <div class="sec-hd">
+                        <h2><i class="fas fa-chalkboard-teacher"></i> Add Faculty</h2>
+                    </div>
+                    <div class="form-card">
+                        <div class="form-grid" id="addFacForm"></div>
+                    </div>
+                </section>
+                <section class="sec" id="sec-addStudent">
+                    <div class="sec-hd">
+                        <h2><i class="fas fa-user-graduate"></i> Add Student</h2>
+                    </div>
+                    <div class="form-card">
+                        <div class="form-grid" id="addStuForm"></div>
+                    </div>
+                </section>
+
+                <!-- ══ ALL USERS ══ -->
+                <section class="sec" id="sec-allUsers">
+                    <div class="sec-hd">
+                        <h2><i class="fas fa-users"></i> All Users</h2>
+                    </div>
+                    <div class="filter-row">
+                        <button class="filter-btn active" onclick="filterUsers(this,'all')">All</button>
+                        <button class="filter-btn" onclick="filterUsers(this,'librarian')">Librarians</button>
+                        <button class="filter-btn" onclick="filterUsers(this,'faculty')">Faculty</button>
+                        <button class="filter-btn" onclick="filterUsers(this,'student')">Students</button>
+                        <input type="text" class="search-inp" placeholder="Search by name, ID or email..." oninput="searchUsers(this.value)" />
+                    </div>
+                    <div class="table-card" id="usersTable"></div>
+                </section>
+
+                <!-- ══ ADMIN — VIEW BOOKS (with stats) ══ -->
+                <section class="sec" id="sec-adminBooks">
+                    <div class="sec-hd">
+                        <h2><i class="fas fa-books"></i> Library Books</h2>
+                    </div>
+                    <div id="adminBooksSummary"></div>
+                    <div class="dash-grid2" style="margin-bottom:16px">
+                        <div class="card">
+                            <div class="card-hd">
+                                <h3><i class="fas fa-chart-bar"></i> Books by Category</h3>
+                            </div>
+                            <div class="cat-chart" id="adminCatBreak"></div>
+                        </div>
+                        <div class="card">
+                            <div class="card-hd">
+                                <h3><i class="fas fa-fire"></i> Most Borrowed</h3>
+                            </div>
+                            <div class="rank-list" id="mostBorrowed"></div>
+                        </div>
+                    </div>
+                    <div class="filter-row">
+                        <input type="text" class="search-inp" placeholder="Search by title, author, ID or category..." oninput="filterAdminBooks(this.value)" style="flex:1" />
+                    </div>
+                    <div class="table-card" id="adminBooksTable"></div>
+                </section>
+
+                <!-- ══ ADMIN — BROWSE BOOKS (cards) ══ -->
+                <section class="sec" id="sec-adminBrowseBooks">
+                    <div class="sec-hd">
+                        <h2><i class="fas fa-search"></i> Browse Books</h2>
+                    </div>
+                    <div class="filter-row">
+                        <input type="text" class="search-inp" placeholder="Search books..." oninput="loadBooksGrid('adminBrowseGrid',{q:this.value})" />
+                        <select style="background:var(--card);border:1px solid var(--border);border-radius:var(--rsm);padding:7px 14px;color:var(--t1);font-family:var(--f-body);font-size:13px;cursor:pointer" onchange="loadBooksGrid('adminBrowseGrid',{cat:this.value})">
+          <option value="">All Categories</option>
+          <option>Java</option><option>Python</option><option>AI/ML</option>
+          <option>Data Structures</option><option>Web Development</option>
+          <option>Networks</option><option>Operating Systems</option>
+          <option>Mathematics</option><option>Physics</option>
+        </select>
+                        <button class="filter-btn" onclick="loadBooksGrid('adminBrowseGrid',{avail:'yes'})"><i class="fas fa-check-circle"></i> Available</button>
+                        <button class="filter-btn" onclick="loadBooksGrid('adminBrowseGrid')">All Books</button>
+                    </div>
+                    <div class="books-grid" id="adminBrowseGrid"></div>
+                </section>
+
+                <!-- ══ DONATIONS ══ -->
+                <section class="sec" id="sec-donations">
+                    <div class="sec-hd">
+                        <h2><i class="fas fa-hand-holding-heart"></i> Book Donations</h2>
+                    </div>
+                    <div class="donation-banner">
+                        <div class="don-icon"><i class="fas fa-hand-holding-heart"></i></div>
+                        <div>
+                            <h3>Manage Book Donations</h3>
+                            <p>Review and approve books donated by students, or record a donation on behalf of a student.</p>
+                        </div>
+                    </div>
+                    <div class="form-card" style="margin-bottom:16px">
+                        <div style="font-family:var(--f-display);font-size:16px;font-weight:700;margin-bottom:16px;color:var(--t1)"><i class="fas fa-plus-circle" style="color:var(--gold2)"></i> Record Donation by Student</div>
+                        <div class="form-grid">
+                            <div class="fg"><label>Student Name *</label><input type="text" id="adm_don_student" placeholder="Full name" /></div>
+                            <div class="fg"><label>Roll Number / ID *</label><input type="text" id="adm_don_roll" placeholder="e.g. 21VE1A0501" /></div>
+                            <div class="fg"><label>Book Title *</label><input type="text" id="adm_don_title" placeholder="Book title" /></div>
+                            <div class="fg"><label>Author *</label><input type="text" id="adm_don_author" placeholder="Author name" /></div>
+                            <div class="fg"><label>Category</label><select id="adm_don_cat"><option value="">Select</option><option>Java</option><option>Python</option><option>AI/ML</option><option>Data Structures</option><option>Web Development</option><option>Networks</option><option>Operating Systems</option><option>Mathematics</option><option>Physics</option><option>Other</option></select></div>
+                            <div class="fg"><label>Condition</label><select id="adm_don_cond"><option>Excellent</option><option>Very Good</option><option>Good</option><option>Fair</option></select></div>
+                            <div class="fg"><label>Copies</label><input type="number" id="adm_don_copies" value="1" min="1" /></div>
+                            <div class="fg"><label>Department</label><input type="text" id="adm_don_dept" placeholder="e.g. B.Tech CSE" /></div>
+                        </div>
+                        <div class="form-actions"><button class="btn-donate" onclick="recordDonationByStaff('adm')"><i class="fas fa-save"></i> Record Donation</button></div>
+                    </div>
+                    <div class="filter-row">
+                        <button class="filter-btn active" onclick="filterDonations(this,'all')">All Donations</button>
+                        <button class="filter-btn" onclick="filterDonations(this,'pending')">Pending</button>
+                        <button class="filter-btn" onclick="filterDonations(this,'approved')">Approved</button>
+                    </div>
+                    <div class="table-card" id="allDonationsTable"></div>
+                </section>
+
+                <!-- ══ ACTIVITY ══ -->
+                <section class="sec" id="sec-activity">
+                    <div class="sec-hd">
+                        <h2><i class="fas fa-history"></i> Activity Log</h2>
+                    </div>
+                    <div class="card">
+                        <div class="activity-list" id="fullActivity"></div>
+                    </div>
+                </section>
+
+                <!-- ══ SYSTEM SETTINGS ══ -->
+                <section class="sec" id="sec-systemSettings">
+                    <div class="sec-hd">
+                        <h2><i class="fas fa-cog"></i> System Settings</h2>
+                    </div>
+                    <div id="systemSettingsContent"></div>
+                </section>
+
+                <!-- ══ PROFILE ══ -->
+                <section class="sec" id="sec-profile">
+                    <div class="sec-hd">
+                        <h2><i class="fas fa-user-circle"></i> My Profile</h2>
+                    </div>
+                    <div id="profileContent"></div>
+                </section>
+
+                <!-- ══ SETTINGS ══ -->
+                <section class="sec" id="sec-settings">
+                    <div class="sec-hd">
+                        <h2><i class="fas fa-cog"></i> Settings</h2>
+                    </div>
+                    <div id="settingsContent"></div>
+                </section>
+
+            </div>
+        </div>
+    </div>
+    <!-- CONFIRM MODAL -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-box sm">
+            <div class="modal-hd">
+                <h3><i class="fas fa-exclamation-triangle" style="color:var(--red)"></i> Confirm</h3><button class="modal-cls" onclick="closeModal('confirmModal')"><i class="fas fa-times"></i></button></div>
+            <div class="modal-bd">
+                <p id="confirmMsg" style="margin-bottom:20px;color:var(--t2);line-height:1.6"></p>
+                <div style="display:flex;gap:10px"><button class="btn-danger" id="confirmYes">Yes, Proceed</button><button class="btn-ghost" onclick="closeModal('confirmModal')">Cancel</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT USER MODAL -->
+    <div class="modal-overlay" id="editUserModal">
+        <div class="modal-box">
+            <div class="modal-hd">
+                <h3><i class="fas fa-user-edit" style="color:var(--gold2)"></i> Edit User Account</h3>
+                <button class="modal-cls" onclick="closeModal('editUserModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-bd">
+                <input type="hidden" id="eu_id" />
+                <div style="background:rgba(125,211,252,.08);border:1px solid rgba(125,211,252,.25);border-radius:var(--rsm);padding:10px 14px;margin-bottom:16px;font-size:13px;color:var(--cyan)">
+                    <i class="fas fa-info-circle"></i> <strong>User ID and Role cannot be changed</strong> for security. Change password only if resetting for the user.
+                </div>
+                <div class="form-grid">
+                    <div class="fg"><label>User ID (locked)</label><input type="text" id="eu_id_display" readonly style="opacity:.5;cursor:not-allowed" /></div>
+                    <div class="fg"><label>Role (locked)</label>
+                        <select id="eu_role" disabled style="opacity:.5;cursor:not-allowed">
+            <option value="librarian">Librarian</option>
+            <option value="faculty">Faculty</option>
+            <option value="student">Student</option>
+          </select>
+                    </div>
+                    <div class="fg"><label>Full Name *</label><input type="text" id="eu_name" placeholder="Full name" /></div>
+                    <div class="fg"><label>Email *</label><input type="email" id="eu_email" placeholder="email@vemu.ac.in" /></div>
+                    <div class="fg"><label>Phone</label><input type="text" id="eu_phone" placeholder="10-digit number" /></div>
+                    <div class="fg"><label>Department</label><input type="text" id="eu_dept" placeholder="e.g. B.Tech CSE" /></div>
+                    <div class="fg" id="eu_year_wrap"><label>Year</label>
+                        <select id="eu_year"><option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option></select>
+                    </div>
+                    <div class="fg"><label>New Password <span style="color:var(--t3);font-weight:400">(leave blank to keep)</span></label><input type="password" id="eu_pw" placeholder="Leave blank to keep current" /></div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn-primary" onclick="saveEditUser()"><i class="fas fa-save"></i> Save Changes</button>
+                    <button class="btn-ghost" onclick="closeModal('editUserModal')">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="toast-wrap" id="toastWrap"></div>
+    <script src="script.js"></script>
+    <script>
+        initDashboard('admin');
+    </script>
+</body>
+
+</html>

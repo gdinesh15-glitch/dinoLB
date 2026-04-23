@@ -1,0 +1,165 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Verdana, sans-serif;
+}
+
+
+/* BODY */
+
+body {
+    background: #f4f6fb;
+    line-height: 1.6;
+}
+
+
+/* HEADER */
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 8%;
+    background: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+
+/* LOGO */
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 22px;
+    font-weight: bold;
+    color: #1a2a6c;
+}
+
+.logo img {
+    height: 40px;
+}
+
+
+/* NAVIGATION */
+
+nav {
+    display: flex;
+    gap: 25px;
+    align-items: center;
+}
+
+nav a {
+    text-decoration: none;
+    color: #1a2a6c;
+    font-weight: 600;
+}
+
+
+/* LOGIN BUTTON */
+
+.login-btn {
+    background: #e53935;
+    color: white;
+    padding: 8px 18px;
+    border-radius: 20px;
+}
+
+.login-btn:hover {
+    background: #c62828;
+}
+
+
+/* LOGIN PAGE BACKGROUND */
+
+.login-page {
+    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("login.jpeg");
+    background-size: cover;
+    background-position: center;
+    min-height: 100vh;
+}
+
+
+/* LOGIN TITLE */
+
+.login-title {
+    text-align: center;
+    color: white;
+    margin-top: 40px;
+}
+
+
+/* ROLE CONTAINER */
+
+.role-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 25px;
+    margin-top: 40px;
+}
+
+.role-card:hover {
+    transform: translateY(-5px);
+    background: #f6fafa;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+    border-color: #b8860b;
+}
+
+
+/* ROLE CARD */
+
+.role-card {
+    background: white;
+    padding: 25px;
+    width: 220px;
+    text-align: center;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+}
+
+.role-card h3 {
+    margin-bottom: 15px;
+}
+
+.role-card .btn {
+    display: block;
+    margin-top: 15px;
+    background: #f4a62a;
+    color: white;
+    padding: 10px;
+    border-radius: 20px;
+    text-decoration: none;
+}
+
+.role-card .btn:hover {
+    background: #d8901f;
+}
+
+
+/* FIX LOGIN PAGE HEIGHT */
+
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* CENTER LOGIN CONTENT */
+
+.login-page main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+
+/* FOOTER ALWAYS AT BOTTOM */
+
+footer {
+    margin-top: auto;
+}

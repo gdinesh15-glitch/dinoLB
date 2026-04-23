@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Student Dashboard - VEMU Library Management System">
+    <title>Student Dashboard - Library Management System</title>
+    <link rel="stylesheet" href="student-dashboard.css">
+</head>
+
+<body class="student-dashboard">
+    <!-- HEADER & NAVIGATION -->
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <img src="vemu-logo.jpeg" alt="VEMU Logo">
+                <span>VEMU LIBRARY</span>
+            </div>
+            <nav>
+                <a href="index.html">Home</a>
+                <a href="student-dashboard.html">Dashboard</a>
+                <a href="contact.html">Contact</a>
+                <a href="login.html" class="login-btn">Login</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main>
+        <!-- DASHBOARD HEADER -->
+        <div class="dashboard-header">
+            <h2>👨‍🎓 Student Dashboard</h2>
+            <p>Welcome to Library Management System - Student Portal</p>
+        </div>
+
+        <div class="container">
+            <!-- STUDENT INFORMATION -->
+            <section class="form-section" style="margin-bottom: 30px;">
+                <h3>👤 Your Profile Information</h3>
+                <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <p><strong>Student Name:</strong> Rahul Kumar</p>
+                        <p><strong>Student ID:</strong> 21BIT001</p>
+                        <p><strong>Branch:</strong> Computer Science Engineering</p>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <p><strong>Semester:</strong> 5</p>
+                        <p><strong>Books Borrowed:</strong> 2</p>
+                        <p><strong>Email:</strong> rahul.kumar@vemu.edu.in</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEARCH BOOKS SECTION -->
+            <section class="form-section" style="margin-bottom: 30px;">
+                <h3>🔍 Search Available Books</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="search-title">Book Title</label>
+                        <input type="text" id="search-title" name="search-title" placeholder="Search by book title">
+                    </div>
+                    <div class="form-group">
+                        <label for="search-author">Author Name</label>
+                        <input type="text" id="search-author" name="search-author" placeholder="Search by author">
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" name="category">
+              <option value="">All Categories</option>
+              <option value="engineering">Engineering</option>
+              <option value="science">Science</option>
+              <option value="mathematics">Mathematics</option>
+              <option value="literature">Literature</option>
+              <option value="history">History</option>
+            </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STATISTICS SECTION -->
+            <section style="margin-bottom: 40px;">
+                <h3 style="color: #667eea; margin-bottom: 20px; font-size: 24px;">📊 Your Library Statistics</h3>
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <h4>Books Issued</h4>
+                        <div class="stat-number">2</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Books Returned</h4>
+                        <div class="stat-number">8</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Overdue Books</h4>
+                        <div class="stat-number">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Late Fees</h4>
+                        <div class="stat-number">Rs. 0</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AVAILABLE BOOKS TABLE -->
+            <section class="table-container">
+                <h3>📚 Available Books in Library</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Book Name</th>
+                            <th>Author</th>
+                            <th>Book ID</th>
+                            <th>Category</th>
+                            <th>Copies</th>
+                            <th>Availability</th>
+                            <th>Due Period</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Data Structures</td>
+                            <td>Mark Allen Weiss</td>
+                            <td>DS-001</td>
+                            <td>Engineering</td>
+                            <td>5</td>
+                            <td><span class="status-badge status-available">Available</span></td>
+                            <td>15 Days</td>
+                        </tr>
+                        <tr>
+                            <td>Python Programming</td>
+                            <td>Guido van Rossum</td>
+                            <td>PYTHON-002</td>
+                            <td>Programming</td>
+                            <td>3</td>
+                            <td><span class="status-badge status-available">Available</span></td>
+                            <td>15 Days</td>
+                        </tr>
+                        <tr>
+                            <td>Database Design</td>
+                            <td>C.J. Date</td>
+                            <td>DB-003</td>
+                            <td>Engineering</td>
+                            <td>0</td>
+                            <td><span class="status-badge status-unavailable">Not Available</span></td>
+                            <td>15 Days</td>
+                        </tr>
+                        <tr>
+                            <td>Web Development</td>
+                            <td>Jon Duckett</td>
+                            <td>WEB-004</td>
+                            <td>Programming</td>
+                            <td>2</td>
+                            <td><span class="status-badge status-available">Available</span></td>
+                            <td>15 Days</td>
+                        </tr>
+                        <tr>
+                            <td>Algorithm Design</td>
+                            <td>Kleinberg & Tardos</td>
+                            <td>ALGO-005</td>
+                            <td>Computer Science</td>
+                            <td>4</td>
+                            <td><span class="status-badge status-available">Available</span></td>
+                            <td>15 Days</td>
+                        </tr>
+                        <tr>
+                            <td>Operating Systems</td>
+                            <td>Abraham Silberschatz</td>
+                            <td>OS-006</td>
+                            <td>Engineering</td>
+                            <td>6</td>
+                            <td><span class="status-badge status-available">Available</span></td>
+                            <td>15 Days</td>
+                        </tr>
+                        <tr>
+                            <td>Computer Networks</td>
+                            <td>Andrew S. Tanenbaum</td>
+                            <td>CN-007</td>
+                            <td>Networking</td>
+                            <td>2</td>
+                            <td><span class="status-badge status-available">Available</span></td>
+                            <td>15 Days</td>
+                        </tr>
+                        <tr>
+                            <td>Software Engineering</td>
+                            <td>Ian Sommerville</td>
+                            <td>SE-008</td>
+                            <td>Software</td>
+                            <td>1</td>
+                            <td><span class="status-badge status-available">Available</span></td>
+                            <td>15 Days</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- BORROWED BOOKS TABLE -->
+            <section class="table-container">
+                <h3>📖 Your Borrowed Books</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Book Name</th>
+                            <th>Author</th>
+                            <th>Book ID</th>
+                            <th>Borrowed Date</th>
+                            <th>Due Date</th>
+                            <th>Days Left</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Data Structures</td>
+                            <td>Mark Allen Weiss</td>
+                            <td>DS-001</td>
+                            <td>01-03-2024</td>
+                            <td>15-03-2024</td>
+                            <td>13 Days</td>
+                            <td><span class="status-badge status-pending">Pending</span></td>
+                        </tr>
+                        <tr>
+                            <td>Python Programming</td>
+                            <td>Guido van Rossum</td>
+                            <td>PYTHON-002</td>
+                            <td>28-02-2024</td>
+                            <td>14-03-2024</td>
+                            <td>12 Days</td>
+                            <td><span class="status-badge status-pending">Pending</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- BACK TO LOGIN -->
+            <div style="text-align: center; margin: 40px 0;">
+                <a href="login.html" class="btn btn-secondary">← Back to Login</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <p class="footer-text">&copy; 2024 VEMU INSTITUTE OF TECHNOLOGY Library Management System</p>
+        <p class="footer-text">All Rights Reserved | Developed for Educational Purpose</p>
+    </footer>
+</body>
+
+</html>

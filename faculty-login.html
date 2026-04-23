@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Faculty Login - VEMU Library Management System">
+    <title>Faculty Login - Library Management System</title>
+    <link rel="stylesheet" href="faculty-login.css">
+</head>
+
+<body class="login-page">
+    <!-- HEADER & NAVIGATION -->
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <img src="vemu-logo.jpeg" alt="VEMU Logo">
+                <span>VEMU LIBRARY</span>
+            </div>
+            <nav>
+                <a href="index.html">Home</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="login.html" class="login-btn">Login</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main>
+        <div class="form-container">
+            <h2>👨‍🏫 Faculty Login Portal</h2>
+
+            <!-- LOGIN FORM -->
+            <form action="faculty-dashboard.html" method="GET">
+                <!-- Username -->
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Enter your username" required>
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                </div>
+
+                <!-- Branch -->
+                <div class="form-group">
+                    <label for="branch">Branch</label>
+                    <select id="branch" name="branch" required>
+            <option value="">Select Branch</option>
+            <option value="cse">Computer Science Engineering</option>
+            <option value="ece">Electronics & Communication Eng.</option>
+            <option value="ee">Electrical Engineering</option>
+            <option value="me">Mechanical Engineering</option>
+            <option value="ce">Civil Engineering</option>
+          </select>
+                </div>
+
+                <!-- User ID -->
+                <div class="form-group">
+                    <label for="user-id">User ID</label>
+                    <input type="text" id="user-id" name="user-id" placeholder="Enter your user ID" required>
+                </div>
+
+                <!-- Email ID -->
+                <div class="form-group">
+                    <label for="email">Email ID</label>
+                    <input type="email" id="email" name="email" placeholder="Enter your email address" required>
+                </div>
+
+                <!-- Login Button -->
+                <button type="submit" class="btn btn-block btn-large">Login to Dashboard</button>
+            </form>
+
+            <!-- Back Link -->
+            <div style="text-align: center; margin-top: 20px;">
+                <p>
+                    <a href="login.html" style="color: #667eea; text-decoration: none;">← Back to Role Selection</a>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <p class="footer-text">&copy; 2024 VEMU INSTITUTE OF TECHNOLOGY Library Management System</p>
+        <p class="footer-text">All Rights Reserved | Developed for Educational Purpose</p>
+    </footer>
+</body>
+
+</html>
