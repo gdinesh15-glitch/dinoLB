@@ -1,213 +1,328 @@
-import React, { useState, useEffect } from 'react';
-import { DB, genId, addActivity } from '../../utils/db';
-import { 
-  Plus, X, Trash2, Search, BookOpen, 
-  Layers, Database, Flame
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  BookOpen, Search, Plus, X, Pencil, Trash2, Save,
+  ChevronRight, RefreshCw, Database, Layers, Flame, CheckCircle,
+  AlertCircle, SlidersHorizontal, BookCopy
 } from 'lucide-react';
-import { Card, Badge, Button, Input } from '../../components/SharedUI';
 import bookService from '../../api/services/bookService';
 
+/* ── Toast ─────────────────────────────────────────────────────── */
+const Toast = ({ msg, type, onClose }) => {
+  useEffect(() => { const t = setTimeout(onClose, 4000); return () => clearTimeout(t); }, []);
+  const c = type === 'success' ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' : 'bg-rose-500/20 border-rose-500/40 text-rose-300';
+  const Icon = type === 'success' ? CheckCircle : AlertCircle;
+  return (
+    <div className={`fixed top-5 right-5 z-[100] flex items-center gap-3 px-5 py-3.5 rounded-2xl border shadow-2xl backdrop-blur-md text-sm font-semibold ${c}`}>
+      <Icon className="w-4 h-4 flex-shrink-0" /><span>{msg}</span>
+      <button onClick={onClose} className="ml-1 opacity-60 hover:opacity-100"><X className="w-4 h-4" /></button>
+    </div>
+  );
+};
+
+/* ── Helpers ───────────────────────────────────────────────────── */
+const CATEGORIES = ['All', 'Software Engineering', 'Java', 'Python', 'Data Structures', 'Web Development', 'Databases', 'Operating Systems', 'Networking', 'AI/ML', 'General'];
+const PAGE_SIZE = 10;
+const Field = ({ label, children }) => (
+  <div className="flex flex-col gap-1.5">
+    <label className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'rgba(148,163,184,0.8)' }}>{label}</label>
+    {children}
+  </div>
+);
+const inp = "w-full px-4 h-11 rounded-xl text-sm font-medium outline-none transition-all focus:ring-2 focus:ring-indigo-500/60 placeholder:text-slate-600";
+const inpStyle = { background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(51,65,85,0.8)', color: '#e2e8f0' };
+const card = { background: 'rgba(15,23,42,0.7)', border: '1px solid rgba(51,65,85,0.6)', backdropFilter: 'blur(20px)' };
+
+const statusBadge = (s) => {
+  if (s === 'Available') return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
+  if (s === 'Low Stock') return 'bg-amber-500/15 text-amber-400 border-amber-500/30';
+  return 'bg-rose-500/15 text-rose-400 border-rose-500/30';
+};
+
+/* ══ Books Component ═══════════════════════════════════════════════ */
 const Books = () => {
   const [books, setBooks] = useState([]);
   const [search, setSearch] = useState('');
+  const [catFilter, setCatFilter] = useState('All');
   const [showForm, setShowForm] = useState(false);
+  const [editBook, setEditBook] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [page, setPage] = useState(1);
 
-  const fetchBooks = async () => {
+  const notify = (msg, type = 'success') => setToast({ msg, type });
+
+  const fetchBooks = useCallback(async () => {
     setLoading(true);
-    const res = await bookService.getAllBooks();
-    if (res.success) {
-      setBooks(res.data);
-    }
+    const r = await bookService.getAllBooks();
+    if (r.success) setBooks(r.data);
+    else notify(r.error || 'Failed to load books', 'error');
     setLoading(false);
-  };
-
-  useEffect(() => { 
-    fetchBooks();
   }, []);
 
-  const handleAdd = async (e) => {
+  useEffect(() => { fetchBooks(); }, [fetchBooks]);
+
+  /* Submit */
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
     const fd = new FormData(e.target);
-    const title = fd.get('title');
-    const qty = parseInt(fd.get('qty') || '1');
-    
-    const newBook = { 
-      isbn: fd.get('isbn') || '', 
-      title, 
-      author: fd.get('author'), 
-      category: fd.get('category'), 
-      qty, 
-      shelf: fd.get('shelf') || 'TBD', 
-      year: parseInt(fd.get('year')) || new Date().getFullYear(),
-      is_digital: fd.get('type') === 'digital'
+    const payload = {
+      title: fd.get('title'),
+      author: fd.get('author'),
+      category: fd.get('category'),
+      isbn: fd.get('isbn'),
+      publisher: fd.get('publisher'),
+      totalCopies: parseInt(fd.get('totalCopies') || '1'),
+      availableCopies: parseInt(fd.get('availableCopies') || '1'),
+      shelfLocation: fd.get('shelf') || 'TBD',
     };
-    
-    const res = await bookService.addBook(newBook);
-    if (res.success) {
-      alert(`✅ "${title}" registration successful!`);
-      fetchBooks();
-      setShowForm(false);
-    } else {
-      alert(res.error);
-    }
+
+    const r = editBook
+      ? await bookService.updateBook(editBook._id, payload)
+      : await bookService.addBook(payload);
+    setSaving(false);
+    if (r.success) {
+      notify(`"${payload.title}" ${editBook ? 'updated' : 'registered'}!`);
+      fetchBooks(); setShowForm(false); setEditBook(null);
+    } else notify(r.error || 'Operation failed', 'error');
   };
 
-  const deleteBook = async (b) => {
-    if (!window.confirm(`Are you sure you want to PERMANENTLY delete "${b.title}"?`)) return;
-    const res = await bookService.deleteBook(b.id);
-    if (res.success) {
-      alert('Asset removed from registry.');
-      fetchBooks();
-    }
+  /* Delete */
+  const handleDelete = async (b) => {
+    if (!window.confirm(`Remove "${b.title}" permanently?`)) return;
+    const r = await bookService.deleteBook(b._id);
+    r.success ? (notify(`"${b.title}" removed.`), fetchBooks()) : notify(r.error || 'Delete failed', 'error');
   };
 
-  const filtered = books.filter(b => 
-    !search || 
-    b.title.toLowerCase().includes(search.toLowerCase()) || 
-    b.author.toLowerCase().includes(search.toLowerCase()) ||
-    b.id?.toLowerCase().includes(search.toLowerCase())
-  );
+  /* Edit */
+  const startEdit = (b) => {
+    setEditBook(b); setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-  const categories = [...new Set(books.map(b => b.category))];
+  /* Filter + Search */
+  const filtered = books.filter(b => {
+    if (catFilter !== 'All' && b.category !== catFilter) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      return b.title?.toLowerCase().includes(q) || b.author?.toLowerCase().includes(q) || b.assetId?.toLowerCase().includes(q) || b.isbn?.toLowerCase().includes(q);
+    }
+    return true;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  /* Stats */
+  const totalVolume = books.reduce((s, b) => s + (b.totalCopies || 0), 0);
+  const totalAvailable = books.reduce((s, b) => s + (b.availableCopies || 0), 0);
+  const catCounts = {};
+  books.forEach(b => { catCounts[b.category] = (catCounts[b.category] || 0) + 1; });
+  const topCategory = Object.entries(catCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
 
   return (
-    <div className="space-y-8 animate-in opacity-0">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="min-h-screen w-full p-4 md:p-6 space-y-5" style={{ background: 'transparent' }}>
+      {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
+
+      {/* ── Header ───────────────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-black tracking-tight text-[var(--text-primary)] uppercase">Asset Repository</h2>
-          <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] mt-1">Institutional book inventory and metadata</p>
+          <h1 className="text-2xl md:text-3xl font-black text-white mb-1.5">Asset Repository</h1>
+          <div className="flex items-center gap-1.5 text-xs font-medium" style={{ color: 'rgba(148,163,184,0.7)' }}>
+            <span>Admin Dashboard</span><ChevronRight className="w-3 h-3" />
+            <span>Library</span><ChevronRight className="w-3 h-3" />
+            <span className="text-indigo-400">Asset Repository</span>
+          </div>
         </div>
-        <Button 
-          variant={showForm ? 'secondary' : 'primary'}
-          onClick={() => setShowForm(!showForm)}
-        >
-          {showForm ? <X className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-          {showForm ? 'Abort Entry' : 'Register New Asset'}
-        </Button>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <button onClick={fetchBooks}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:bg-white/5"
+            style={{ border: '1px solid rgba(51,65,85,0.8)', color: '#94a3b8' }}>
+            <RefreshCw className="w-4 h-4" /> Refresh
+          </button>
+          <button onClick={() => { setShowForm(!showForm); setEditBook(null); }}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 hover:-translate-y-0.5 active:scale-95 shadow-lg"
+            style={{ background: 'linear-gradient(135deg,#6366f1,#7c3aed)', boxShadow: '0 4px 20px rgba(99,102,241,0.35)' }}>
+            {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+            {showForm ? 'Cancel' : 'Register New Asset'}
+          </button>
+        </div>
       </div>
 
-      {/* Stats Mini Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-         <Card className="flex items-center space-x-4 border-l-4 border-l-indigo-500">
-            <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 rounded-xl">
-               <Database className="w-5 h-5" />
+      {/* ── Stats ────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        {[
+          { label: 'Total Unique Titles', val: books.length, icon: Database, color: '#818cf8', bg: 'rgba(99,102,241,0.12)' },
+          { label: 'Total Asset Volume', val: totalVolume, icon: Layers, color: '#34d399', bg: 'rgba(16,185,129,0.12)' },
+          { label: 'Most Popular Category', val: topCategory, icon: Flame, color: '#fbbf24', bg: 'rgba(251,191,36,0.12)' },
+          { label: 'Available Copies', val: totalAvailable, icon: BookCopy, color: '#38bdf8', bg: 'rgba(56,189,248,0.12)' },
+        ].map((s, i) => (
+          <div key={i} className="rounded-2xl p-5 flex items-center gap-4" style={card}>
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: s.bg }}>
+              <s.icon className="w-5 h-5" style={{ color: s.color }} />
             </div>
             <div>
-               <p className="text-[10px] font-black uppercase text-slate-400">Total Unique Titles</p>
-               <h4 className="text-xl font-black">{books.length}</h4>
+              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'rgba(100,116,139,0.8)' }}>{s.label}</p>
+              <p className="text-xl font-black text-white mt-0.5">{s.val}</p>
             </div>
-         </Card>
-         <Card className="flex items-center space-x-4 border-l-4 border-l-emerald-500">
-            <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-xl">
-               <Layers className="w-5 h-5" />
-            </div>
-            <div>
-               <p className="text-[10px] font-black uppercase text-slate-400">Total Asset Volume</p>
-               <h4 className="text-xl font-black">{books.reduce((s, b) => s + (b.qty || 0), 0)}</h4>
-            </div>
-         </Card>
-         <Card className="flex items-center space-x-4 border-l-4 border-l-amber-500">
-            <div className="p-3 bg-amber-50 dark:bg-amber-900/20 text-amber-600 rounded-xl">
-               <Flame className="w-5 h-5" />
-            </div>
-            <div>
-               <p className="text-[10px] font-black uppercase text-slate-400">Most Popular Category</p>
-               <h4 className="text-xl font-black">{categories[0] || 'N/A'}</h4>
-            </div>
-         </Card>
+          </div>
+        ))}
       </div>
 
-      {/* Registration Form */}
+      {/* ── Form ─────────────────────────────────────────────────── */}
       {showForm && (
-        <Card className="border-t-4 border-t-indigo-500 shadow-2xl">
-          <form onSubmit={handleAdd} className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <Input label="Asset Title" name="title" required />
-              <Input label="Primary Author" name="author" required />
-              <div className="flex flex-col gap-1.5 w-full">
-                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Classification</label>
-                <select className="pro-input bg-transparent" name="category" required>
-                  {['Java','Python','AI/ML','Data Structures','Web Development','Mathematics','Operating Systems','Other'].map(c => <option key={c}>{c}</option>)}
-                </select>
-              </div>
-              <Input label="ISBN Code" name="isbn" />
-              <Input label="Release Year" name="year" type="number" defaultValue={new Date().getFullYear()} />
-              <Input label="Volume Quantity" name="qty" type="number" defaultValue="1" min="1" />
-              <Input label="Shelf Coordinates" name="shelf" placeholder="e.g. A-01" />
-              <div className="flex flex-col gap-1.5 w-full">
-                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Modality</label>
-                <select className="pro-input bg-transparent" name="type">
-                  <option value="physical">Physical Book</option>
-                  <option value="digital">Digital Asset</option>
-                </select>
-              </div>
+        <div className="rounded-2xl overflow-hidden" style={card}>
+          <div className="px-6 py-5 flex items-center gap-4" style={{ borderBottom: '1px solid rgba(51,65,85,0.5)' }}>
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+              style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.3),rgba(124,58,237,0.3))', border: '1px solid rgba(99,102,241,0.4)' }}>
+              <BookOpen className="w-6 h-6 text-indigo-400" />
             </div>
-
-            <div className="flex justify-end space-x-4 pt-10 border-t border-[var(--border-color)]">
-              <Button type="button" variant="ghost" onClick={() => setShowForm(false)}>Discard</Button>
-              <Button type="submit" className="px-12">Commit Record</Button>
+            <div>
+              <h2 className="text-base font-bold text-white">{editBook ? `Edit: ${editBook.assetId || editBook.title}` : 'Register New Asset'}</h2>
+              <p className="text-xs mt-0.5" style={{ color: 'rgba(148,163,184,0.7)' }}>Add or modify book inventory records</p>
+            </div>
+          </div>
+          <form key={editBook?._id || 'new'} onSubmit={handleSubmit} className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              <Field label="Book Title *"><input name="title" className={inp} style={inpStyle} placeholder="e.g. Clean Code" defaultValue={editBook?.title || ''} required /></Field>
+              <Field label="Author *"><input name="author" className={inp} style={inpStyle} placeholder="e.g. Robert C. Martin" defaultValue={editBook?.author || ''} required /></Field>
+              <Field label="Category">
+                <select name="category" className={inp} style={inpStyle} defaultValue={editBook?.category || 'General'}>
+                  {CATEGORIES.filter(c => c !== 'All').map(c => <option key={c}>{c}</option>)}
+                </select>
+              </Field>
+              <Field label="ISBN"><input name="isbn" className={inp} style={inpStyle} placeholder="978-XXXXXXXXXX" defaultValue={editBook?.isbn || ''} /></Field>
+              <Field label="Publisher"><input name="publisher" className={inp} style={inpStyle} placeholder="e.g. Pearson" defaultValue={editBook?.publisher || ''} /></Field>
+              <Field label="Total Copies"><input name="totalCopies" type="number" min="1" className={inp} style={inpStyle} defaultValue={editBook?.totalCopies || 1} /></Field>
+              <Field label="Available Copies"><input name="availableCopies" type="number" min="0" className={inp} style={inpStyle} defaultValue={editBook?.availableCopies || 1} /></Field>
+              <Field label="Shelf Location"><input name="shelf" className={inp} style={inpStyle} placeholder="e.g. A-01" defaultValue={editBook?.shelfLocation || ''} /></Field>
+            </div>
+            <div className="flex justify-end mt-6">
+              <button type="submit" disabled={saving}
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-50 active:scale-95"
+                style={{ background: 'linear-gradient(135deg,#6366f1,#7c3aed)', boxShadow: '0 4px 20px rgba(99,102,241,0.3)' }}>
+                {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                {saving ? 'Saving...' : editBook ? 'Update Asset' : 'Save Asset'}
+              </button>
             </div>
           </form>
-        </Card>
+        </div>
       )}
 
-      {/* Directory & Search */}
-      <div className="flex flex-wrap items-center justify-between gap-6">
-        <div className="w-full md:w-96">
-          <Input 
-            icon={Search} 
-            placeholder="Filter catalog..." 
-            value={search} 
-            onChange={e => setSearch(e.target.value)} 
-          />
+      {/* ── Table Card ────────────────────────────────────────────── */}
+      <div className="rounded-2xl overflow-hidden" style={card}>
+        {/* Toolbar */}
+        <div className="px-5 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4" style={{ borderBottom: '1px solid rgba(51,65,85,0.5)' }}>
+          <div className="flex items-center gap-1 flex-wrap">
+            {CATEGORIES.slice(0, 6).map(c => (
+              <button key={c} onClick={() => { setCatFilter(c); setPage(1); }}
+                className="px-3.5 py-2 rounded-xl text-xs font-bold transition-all"
+                style={catFilter === c
+                  ? { background: 'rgba(99,102,241,0.2)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.4)' }
+                  : { background: 'transparent', color: 'rgba(148,163,184,0.7)', border: '1px solid transparent' }}>
+                {c}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(148,163,184,0.5)' }} />
+              <input className={`${inp} pl-9 w-52`} style={inpStyle} placeholder="Search title, author…"
+                value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
+            </div>
+          </div>
         </div>
+
+        {/* Table */}
+        {loading ? (
+          <div className="flex items-center justify-center py-24 gap-3 text-indigo-400">
+            <RefreshCw className="w-6 h-6 animate-spin" />
+            <span className="text-sm font-semibold">Loading books…</span>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[860px]">
+              <thead>
+                <tr style={{ borderBottom: '1px solid rgba(51,65,85,0.5)' }}>
+                  {['Asset ID', 'Book Title', 'Author', 'Category', 'ISBN', 'Avail / Total', 'Status', 'Actions'].map((h, i) => (
+                    <th key={i} className={`py-3.5 px-5 text-left text-[10px] font-bold uppercase tracking-widest ${i === 7 ? 'text-right' : ''}`}
+                      style={{ color: 'rgba(100,116,139,0.9)' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {paginated.map(b => (
+                  <tr key={b._id} className="transition-colors"
+                    style={{ borderBottom: '1px solid rgba(30,41,59,0.5)' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(99,102,241,0.04)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                    <td className="py-4 px-5 align-middle">
+                      <span className="inline-block px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-600/20 text-indigo-400 border border-indigo-500/30">{b.assetId || '—'}</span>
+                    </td>
+                    <td className="py-4 px-5 align-middle"><span className="text-sm font-semibold text-white">{b.title}</span></td>
+                    <td className="py-4 px-5 align-middle text-xs font-medium" style={{ color: 'rgba(148,163,184,0.8)' }}>{b.author}</td>
+                    <td className="py-4 px-5 align-middle"><span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'rgba(148,163,184,0.6)' }}>{b.category}</span></td>
+                    <td className="py-4 px-5 align-middle text-xs" style={{ color: 'rgba(100,116,139,0.7)' }}>{b.isbn || '—'}</td>
+                    <td className="py-4 px-5 align-middle text-xs font-bold">
+                      <span style={{ color: b.availableCopies > 0 ? '#34d399' : '#f87171' }}>{b.availableCopies}</span>
+                      <span style={{ color: 'rgba(100,116,139,0.6)' }}> / {b.totalCopies}</span>
+                    </td>
+                    <td className="py-4 px-5 align-middle">
+                      <span className={`inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase border ${statusBadge(b.status)}`}>{b.status}</span>
+                    </td>
+                    <td className="py-4 px-5 align-middle text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button onClick={() => startEdit(b)} title="Edit"
+                          className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:bg-indigo-500/20"
+                          style={{ border: '1px solid rgba(51,65,85,0.6)', color: '#64748b' }}><Pencil className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => handleDelete(b)} title="Delete"
+                          className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:bg-rose-500/20 hover:text-rose-400"
+                          style={{ border: '1px solid rgba(51,65,85,0.6)', color: '#64748b' }}><Trash2 className="w-3.5 h-3.5" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {paginated.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="py-20 text-center">
+                      <Search className="w-8 h-8 mx-auto mb-3" style={{ color: 'rgba(100,116,139,0.5)' }} />
+                      <p className="text-sm font-semibold" style={{ color: 'rgba(100,116,139,0.7)' }}>No books match your criteria.</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!loading && filtered.length > 0 && (
+          <div className="px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-3"
+            style={{ borderTop: '1px solid rgba(51,65,85,0.5)' }}>
+            <span className="text-xs" style={{ color: 'rgba(100,116,139,0.8)' }}>
+              Showing {Math.min((page - 1) * PAGE_SIZE + 1, filtered.length)} to {Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length} entries
+            </span>
+            <div className="flex items-center gap-1.5">
+              <button disabled={page === 1} onClick={() => setPage(p => p - 1)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center transition-all disabled:opacity-30"
+                style={{ border: '1px solid rgba(51,65,85,0.6)', color: '#64748b' }}>‹</button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
+                <button key={n} onClick={() => setPage(n)}
+                  className="w-8 h-8 rounded-lg text-xs font-bold transition-all"
+                  style={n === page
+                    ? { background: 'rgba(99,102,241,0.25)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.5)' }
+                    : { border: '1px solid rgba(51,65,85,0.6)', color: '#64748b' }}>{n}</button>
+              ))}
+              <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center transition-all disabled:opacity-30"
+                style={{ border: '1px solid rgba(51,65,85,0.6)', color: '#64748b' }}>›</button>
+            </div>
+          </div>
+        )}
       </div>
 
-      <Card className="p-0 border-none overflow-hidden shadow-xl">
-        <div className="overflow-x-auto rounded-2xl border border-[var(--border-color)]">
-          <table className="w-full text-left font-sans">
-            <thead>
-              <tr className="bg-[var(--bg-secondary)] border-b border-[var(--border-color)]">
-                <th className="py-5 px-8 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Asset ID</th>
-                <th className="py-5 px-8 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Title Specification</th>
-                <th className="py-5 px-8 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Classification</th>
-                <th className="py-5 px-8 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Vol. / Avail.</th>
-                <th className="py-5 px-8 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Ops</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--border-color)] bg-[var(--bg-card)]">
-              {filtered.map(b => (
-                <tr key={b.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                  <td className="py-5 px-8">
-                     <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 dark:bg-indigo-950/30 px-3 py-1.5 rounded-lg border border-indigo-100 dark:border-indigo-900/30">
-                        {b.id}
-                     </span>
-                  </td>
-                  <td className="py-5 px-8">
-                    <div className="flex flex-col">
-                      <span className="font-black text-sm text-[var(--text-primary)] group-hover:text-indigo-600 transition-colors">{b.title}</span>
-                      <span className="text-[9px] font-bold text-slate-400 mt-0.5 uppercase tracking-tighter">{b.author}</span>
-                    </div>
-                  </td>
-                  <td className="py-5 px-8">
-                    <Badge type="primary">{b.category}</Badge>
-                  </td>
-                  <td className="py-5 px-8 font-black text-xs">
-                     {b.qty} / <span className={b.available > 0 ? 'text-emerald-500' : 'text-rose-500'}>{b.available}</span>
-                  </td>
-                  <td className="py-5 px-8">
-                    <button onClick={() => deleteBook(b)} className="p-2.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all dark:bg-rose-950/30 dark:hover:bg-rose-600">
-                       <Trash2 className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+      <div className="h-6" />
     </div>
   );
 };

@@ -3,14 +3,24 @@ import { DB, genId, addActivity } from '../../utils/db';
 import { Plus, X, Trash2, Search, BookOpen, Download, ExternalLink, Activity, Layers, Database } from 'lucide-react';
 import { Card, Badge, Button, Input } from '../../components/SharedUI';
 
+import bookService from '../../api/services/bookService';
+
 const CatalogManager = () => {
   const [books, setBooks] = useState([]);
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [isbnLoading, setIsbnLoading] = useState(false);
   const [formData, setFormData] = useState({});
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => { setBooks(DB.get('books') || []); }, []);
+  const fetchBooks = async () => {
+    setLoading(true);
+    const res = await bookService.getAllBooks();
+    if (res.success) setBooks(res.data);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchBooks(); }, []);
 
   const handleIsbnFetch = async () => {
     const isbn = formData.isbn;
@@ -36,25 +46,39 @@ const CatalogManager = () => {
     setIsbnLoading(false);
   };
 
-  const handleAdd = (e) => {
+  const handleAdd = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
-    const id = fd.get('id') || genId('BK');
-    const title = fd.get('title');
-    const qty = parseInt(fd.get('qty') || '1');
-    if (books.find(b => b.id === id)) { alert('Book ID already exists!'); return; }
-    const newBook = { id, isbn: fd.get('isbn') || '', title, author: fd.get('author'), genre: fd.get('genre') || '', category: fd.get('category'), cover_image_url: formData.cover_image_url || '', publisher: fd.get('publisher') || '', is_digital: fd.get('is_digital') === 'true', digital_asset_url: fd.get('digital_url') || '', is_course_reserve: false, qty, available: qty, shelf: fd.get('shelf') || 'TBD', year: parseInt(fd.get('year')) || new Date().getFullYear(), borrow: 0 };
-    const updated = [...books, newBook];
-    DB.set('books', updated); setBooks(updated);
-    addActivity('fa-book', '#fde68a', `Book "${title}" added to catalog`, 'rgba(253,230,138,.15)');
-    setShowForm(false); setFormData({});
-    alert(`✅ "${title}" added to catalog!`);
+    const payload = {
+      assetId: fd.get('id'),
+      title: fd.get('title'),
+      author: fd.get('author'),
+      category: fd.get('category'),
+      isbn: fd.get('isbn'),
+      publisher: fd.get('publisher'),
+      totalCopies: parseInt(fd.get('qty') || '1'),
+      availableCopies: parseInt(fd.get('qty') || '1'),
+      shelfLocation: fd.get('shelf') || 'TBD',
+      edition: fd.get('edition') || '1st Edition',
+      subject: fd.get('subject') || ''
+    };
+
+    const res = await bookService.addBook(payload);
+    if (res.success) {
+      alert(`✅ "${payload.title}" added to catalog!`);
+      fetchBooks();
+      setShowForm(false);
+      setFormData({});
+    } else {
+      alert(res.error || 'Failed to add book');
+    }
   };
 
-  const deleteBook = (b) => {
+  const deleteBook = async (b) => {
     if (!window.confirm(`Remove "${b.title}" from catalog?`)) return;
-    const updated = books.filter(x => x.id !== b.id);
-    DB.set('books', updated); setBooks(updated);
+    const res = await bookService.deleteBook(b._id);
+    if (res.success) fetchBooks();
+    else alert(res.error || 'Delete failed');
   };
 
   const filtered = books.filter(b => !search || b.title.toLowerCase().includes(search.toLowerCase()) || b.isbn.includes(search) || b.author.toLowerCase().includes(search.toLowerCase()));
@@ -167,10 +191,10 @@ const CatalogManager = () => {
             </thead>
             <tbody className="divide-y divide-[var(--border-color)] bg-[var(--bg-card)]">
               {filtered.map(b => (
-                <tr key={b.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
+                <tr key={b._id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
                   <td className="py-5 px-8">
                      <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 dark:bg-indigo-950/30 px-3 py-1.5 rounded-lg border border-indigo-100 dark:border-indigo-900/30">
-                        {b.id}
+                        {b.assetId}
                      </span>
                   </td>
                   <td className="py-5 px-8">
@@ -183,23 +207,11 @@ const CatalogManager = () => {
                   <td className="py-5 px-8">
                     <Badge type="primary" className="text-[9px] lowercase italic">{b.category}</Badge>
                   </td>
+                  <td className="py-5 px-8 font-bold text-xs text-[var(--text-secondary)]">{b.shelfLocation}</td>
+                  <td className="py-5 px-8 font-black text-xs">{b.totalCopies}</td>
                   <td className="py-5 px-8">
-                    <div className="flex items-center space-x-2">
-                       {b.is_digital ? (
-                          <span className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 font-black text-[9px] uppercase tracking-widest bg-indigo-50 dark:bg-indigo-950/30 px-3 py-1 rounded-xl">
-                             <Layers className="h-3 w-3" /> <span>Digital</span>
-                          </span>
-                       ) : (
-                          <span className="flex items-center space-x-2 text-amber-600 dark:text-amber-400 font-black text-[9px] uppercase tracking-widest bg-amber-50 dark:bg-amber-950/30 px-3 py-1 rounded-xl">
-                             <BookOpen className="h-3 w-3" /> <span>Physical</span>
-                          </span>
-                       )}
-                    </div>
-                  </td>
-                  <td className="py-5 px-8 font-black text-xs">{b.qty}</td>
-                  <td className="py-5 px-8">
-                     <span className={`text-[10px] font-black ${b.available > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                        {b.available}
+                     <span className={`text-[10px] font-black ${b.availableCopies > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                        {b.availableCopies}
                      </span>
                   </td>
                   <td className="py-5 px-8">

@@ -2,46 +2,62 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
 import { 
-  GraduationCap, BookMarked, FilePlus, Globe
+  GraduationCap, Search, Bookmark, Clock, 
+  Send, History, User, Settings, Activity,
+  Sliders
 } from 'lucide-react';
 
 // Sub-pages
 import FacultyOverview from './FacultyOverview';
-import CourseReserves from '../Faculty/CourseReserves';
+import BookSearch from '../Faculty/BookSearch';
+import Reservations from '../Faculty/Reservations';
+import MyLoans from '../Faculty/MyLoans';
 import PurchaseRequests from '../Faculty/PurchaseRequests';
-import ILLRequests from '../Faculty/ILLRequests';
+import BorrowHistory from '../Faculty/BorrowHistory';
+import FacultyActivityLog from '../Faculty/FacultyActivityLog';
+import Profile from './Profile';
 import SettingsPage from './Settings';
 
 const FacultyDashboard = () => {
-  const facultySidebar = [
+  const sidebarMenu = [
     {
       title: 'Academic Desk',
       links: [
-        { to: '/faculty', icon: GraduationCap, label: 'Overview' },
-        { to: '/faculty/reserves', icon: BookMarked, label: 'Course Reserves' },
-        { to: '/faculty/requests', icon: FilePlus, label: 'Purchase Reqs' },
+        { to: '/faculty', icon: GraduationCap, label: 'Dashboard' },
+        { to: '/faculty/search', icon: Search, label: 'Search Books' },
+        { to: '/faculty/reserve', icon: Bookmark, label: 'Reserve Books' },
+        { to: '/faculty/loans', icon: Clock, label: 'My Loans' },
+        { to: '/faculty/recommend', icon: Send, label: 'Recommend Books' },
+        { to: '/faculty/history', icon: History, label: 'Borrow History' },
       ]
     },
     {
-      title: 'Global Research',
+      title: 'Reports & Settings',
       links: [
-        { to: '/faculty/ill', icon: Globe, label: 'Inter-Library Loan' },
+        { to: '/faculty/activity', icon: Activity, label: 'Activity Log' },
+        { to: '/faculty/profile', icon: User, label: 'Profile' },
+        { to: '/faculty/settings', icon: Settings, label: 'Settings' },
       ]
     }
   ];
 
   return (
     <DashboardLayout 
-      sidebarGroups={facultySidebar} 
+      sidebarGroups={sidebarMenu} 
       title="Academic Portal" 
-      subtitle="Faculty Research & Resources"
+      subtitle="Faculty Information Suite"
     >
       <Routes>
         <Route index element={<FacultyOverview />} />
-        <Route path="reserves" element={<CourseReserves />} />
-        <Route path="requests" element={<PurchaseRequests />} />
-        <Route path="ill" element={<ILLRequests />} />
+        <Route path="search" element={<BookSearch />} />
+        <Route path="reserve" element={<Reservations />} />
+        <Route path="loans" element={<MyLoans />} />
+        <Route path="recommend" element={<PurchaseRequests />} />
+        <Route path="history" element={<BorrowHistory />} />
+        <Route path="activity" element={<FacultyActivityLog />} />
+        <Route path="profile" element={<Profile />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="*" element={<div className="p-10 text-white/20 font-black uppercase tracking-widest text-center">Module Protocol Offline</div>} />
       </Routes>
     </DashboardLayout>
   );

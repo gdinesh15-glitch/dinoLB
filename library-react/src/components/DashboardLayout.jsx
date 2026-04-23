@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import '../style.css';
 
-const SidebarItem = ({ icon, label, to }) => {
+const SidebarItem = ({ icon: Icon, label, to }) => {
   return (
     <NavLink
       to={to}
@@ -13,7 +13,11 @@ const SidebarItem = ({ icon, label, to }) => {
         `nav-link ${isActive ? 'active' : ''}`
       }
     >
-      <i className={`fas ${icon}`}></i>
+      {typeof Icon === 'string' ? (
+        <i className={`fas ${Icon}`}></i>
+      ) : (
+        <Icon className="w-4 h-4" />
+      )}
       <span>{label}</span>
     </NavLink>
   );
@@ -23,7 +27,7 @@ const DashboardLayout = ({ sidebarGroups, title, subtitle, children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { toggleTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
   const [showNotifs, setShowNotifs] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -130,20 +134,6 @@ const DashboardLayout = ({ sidebarGroups, title, subtitle, children }) => {
                 ))}
               </React.Fragment>
             ))}
-            
-            <div className="sb-section">Reports & Settings</div>
-            <NavLink to={`/${roleName}/activity`} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-              <i className="fas fa-history"></i><span>Activity Log</span>
-            </NavLink>
-            <NavLink to={`/${roleName}/settings`} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-              <i className="fas fa-cog"></i><span>System Settings</span>
-            </NavLink>
-            <NavLink to={`/${roleName}/profile`} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-              <i className="fas fa-user-circle"></i><span>Profile</span>
-            </NavLink>
-            <NavLink to={`/${roleName}/display`} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-              <i className="fas fa-sliders-h"></i><span>Display Settings</span>
-            </NavLink>
           </nav>
 
           <div className="sb-foot">
@@ -169,7 +159,7 @@ const DashboardLayout = ({ sidebarGroups, title, subtitle, children }) => {
                 <i className="fas fa-clock"></i><span id="tbClock">{formattedDate}</span>
               </div>
               <button className="tb-btn" onClick={toggleTheme}>
-                <i className="fas fa-moon" id="darkIcon"></i>
+                <i className={`fas ${theme === 'light' ? 'fa-moon' : 'fa-sun'}`} id="darkIcon"></i>
               </button>
               <div className="notif-wrapper" style={{ position: 'relative' }}>
                 <button className={`tb-btn notif-btn ${showNotifs ? 'active' : ''}`} onClick={() => { setShowNotifs(!showNotifs); if (!showNotifs) markAllRead(); }}>

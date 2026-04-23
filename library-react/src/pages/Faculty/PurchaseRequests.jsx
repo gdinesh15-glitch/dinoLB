@@ -1,160 +1,144 @@
 import React, { useState, useEffect } from 'react';
-import { DB, genId, addActivity } from '../../utils/db';
-import { Plus, X, ShoppingCart, Trash2, BookOpen, Layers, MessageSquare, Database } from 'lucide-react';
-import { Card, Badge, Button, Input } from '../../components/SharedUI';
+import { 
+  Plus, FilePlus, List, CheckCircle, Clock, 
+  AlertTriangle, Send, Loader2, BookOpen, Trash2
+} from 'lucide-react';
+import { Card, Badge, Button } from '../../components/SharedUI';
+import api from '../../api/axios';
 
 const PurchaseRequests = () => {
-  const [requests, setRequests] = useState([]);
-  const [showForm, setShowForm] = useState(false);
-  const userId = 'FAC001';
+  const [tab, setTab] = useState('list');
+  const [recommendations, setRecommendations] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '', author: '', publisher: '', isbn: '', subject: '', reason: '', priority: 'Medium'
+  });
 
-  const reload = () => {
-    const all = DB.get('procurement_requests') || [];
-    setRequests(all.filter(p => p.facultyId === userId));
+  const fetchRecommendations = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get('/faculty/recommendations');
+      setRecommendations(res.data);
+    } catch (err) { console.error('Failed to fetch'); }
+    setLoading(false);
   };
-  useEffect(reload, []);
 
-  const handleAdd = (e) => {
+  useEffect(() => { fetchRecommendations(); }, []);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const fd = new FormData(e.target);
-    const nr = { id: genId('PR'), facultyId: userId, facultyName: 'Dr. Ramesh Kumar', resourceType: fd.get('resourceType'), title: fd.get('title'), details: fd.get('details'), status: 'Pending', date: new Date().toISOString().split('T')[0] };
-    const all = DB.get('procurement_requests') || [];
-    DB.set('procurement_requests', [...all, nr]);
-    addActivity('fa-cart-plus', '#fdba74', `Purchase request: "${nr.title}"`, 'rgba(253,186,116,.15)');
-    setShowForm(false); reload();
-    alert(`✅ Procurement Node Initialized: "${nr.title}" submitted for review.`);
+    setSubmitting(true);
+    try {
+      await api.post('/faculty/recommend', formData);
+      alert('✅ Recommendation submitted successfully!');
+      setFormData({ title: '', author: '', publisher: '', isbn: '', subject: '', reason: '', priority: 'Medium' });
+      setTab('list');
+      fetchRecommendations();
+    } catch (err) { alert('Submission failed'); }
+    setSubmitting(false);
   };
 
-  const deleteRequest = (id) => {
-    if (!window.confirm('Decommission this procurement request?')) return;
-    const all = DB.get('procurement_requests') || [];
-    DB.set('procurement_requests', all.filter(r => r.id !== id));
-    reload();
+  const cardStyle = { 
+    background: 'rgba(15,23,42,0.4)', 
+    border: '1px solid rgba(51,65,85,0.3)', 
+    backdropFilter: 'blur(20px)' 
   };
 
   return (
-    <div className="space-y-8 animate-in opacity-0">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-black tracking-tight text-[var(--text-primary)] uppercase">Procurement Board</h2>
-          <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] mt-1">Strategic resource acquisition & recommendations</p>
+    <div className="space-y-10 animate-in fade-in duration-700">
+      <div className="flex justify-between items-end">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-black text-white tracking-tight uppercase">Academic Purchase Requests</h1>
+          <p className="text-xs font-medium text-slate-500">Recommend new intellectual assets for the university library collection.</p>
         </div>
-        <Button 
-          variant={showForm ? 'secondary' : 'primary'}
-          onClick={() => setShowForm(!showForm)}
-        >
-          {showForm ? <X className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-          {showForm ? 'Abort Request' : 'Propose Acquisition'}
-        </Button>
       </div>
 
-      {showForm && (
-        <Card className="border-t-4 border-t-amber-500 shadow-2xl">
-          <div className="flex items-center space-x-4 mb-10 border-b border-[var(--border-color)] pb-8">
-            <div className="h-14 w-14 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-color)] flex items-center justify-center text-amber-500 shadow-inner">
-               <ShoppingCart className="w-6 h-6" />
-            </div>
-            <div>
-               <h3 className="text-xl font-black tracking-tight uppercase text-[var(--text-primary)]">Acquisition Proposal</h3>
-               <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Formal recommendation for library volume expansion</p>
-            </div>
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        
+        {/* Left Column: Form */}
+        <div className="lg:col-span-5">
+          <Card style={cardStyle} className="p-8 rounded-[3rem] border-t-4 border-t-indigo-500">
+             <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="text-center space-y-2 mb-8">
+                   <div className="w-12 h-12 bg-indigo-500/10 rounded-full flex items-center justify-center text-indigo-400 mx-auto border border-indigo-500/20">
+                      <FilePlus className="w-6 h-6" />
+                   </div>
+                   <h2 className="text-lg font-black text-white uppercase tracking-tight">Recommend Book</h2>
+                </div>
 
-          <form onSubmit={handleAdd} className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Input label="Asset Title" name="title" required placeholder="e.g. Advanced Quantum Algorithms" icon={BookOpen} />
-              <div className="flex flex-col gap-1.5 w-full">
-                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Resource Modality</label>
-                <select name="resourceType" required className="pro-input bg-transparent">
-                  <option value="Book">Physical Monograph</option>
-                  <option value="Journal">Serials / Journals</option>
-                  <option value="E-Resource">Digital Archive / E-book</option>
-                </select>
-              </div>
-              <div className="flex flex-col gap-1.5 md:col-span-2">
-                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-2">
-                  <MessageSquare className="h-3 w-3" /> Procurement Rationale *
-                </label>
-                <textarea 
-                  name="details" 
-                  required 
-                  placeholder="Specify academic necessity or syllabus requirement..." 
-                  className="pro-input min-h-[120px] bg-transparent resize-none py-4"
-                ></textarea>
-              </div>
-            </div>
-            <div className="flex justify-end space-x-4 pt-8 border-t border-[var(--border-color)]">
-              <Button variant="ghost" type="button" onClick={() => setShowForm(false)}>Discard</Button>
-              <Button type="submit" className="px-12 bg-amber-600 hover:bg-amber-500 shadow-amber-600/10">Submit for Approval</Button>
-            </div>
-          </form>
-        </Card>
-      )}
-
-      <Card className="p-0 border-none overflow-hidden shadow-xl">
-        <div className="overflow-x-auto rounded-2xl border border-[var(--border-color)]">
-          <table className="w-full text-left font-sans text-sm">
-            <thead>
-              <tr className="bg-[var(--bg-secondary)] border-b border-[var(--border-color)]">
-                <th className="py-5 px-8 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Registry ID</th>
-                <th className="py-5 px-8 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Asset Title</th>
-                <th className="py-5 px-8 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Modality</th>
-                <th className="py-5 px-8 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Current State</th>
-                <th className="py-5 px-8 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Temporal Node</th>
-                <th className="py-5 px-8 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Protocol</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--border-color)] bg-[var(--bg-card)]">
-              {requests.map(r => (
-                <tr key={r.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
-                  <td className="py-5 px-8 whitespace-nowrap">
-                    <span className="text-[10px] font-black text-amber-600 bg-amber-50 dark:bg-amber-950/30 px-3 py-1.5 rounded-lg border border-amber-100 dark:border-amber-900/30">
-                       {r.id}
-                    </span>
-                  </td>
-                  <td className="py-5 px-8 font-black text-sm text-[var(--text-primary)] uppercase group-hover:text-amber-600 transition-colors">
-                    {r.title}
-                  </td>
-                  <td className="py-5 px-8 font-bold text-[10px] text-slate-400 uppercase tracking-widest">
-                    {r.resourceType}
-                  </td>
-                  <td className="py-5 px-8">
-                    <Badge type={r.status === 'Approved' ? 'available' : r.status === 'Rejected' ? 'overdue' : 'primary'}>
-                      {r.status.toUpperCase()}
-                    </Badge>
-                  </td>
-                  <td className="py-5 px-8 text-xs font-bold text-slate-500">
-                    {r.date}
-                  </td>
-                  <td className="py-5 px-8">
-                    {r.status === 'Pending' && (
-                      <button 
-                        onClick={() => deleteRequest(r.id)} 
-                        className="p-2.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all dark:bg-rose-950/30 dark:hover:bg-rose-600 shadow-sm"
-                      >
-                         <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {requests.length === 0 && (
-                <tr>
-                  <td colSpan="6" className="py-20 text-center">
-                    <div className="flex flex-col items-center">
-                      <div className="h-16 w-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-300 mb-4">
-                        <ShoppingCart className="h-8 w-8" />
-                      </div>
-                      <h4 className="font-black text-lg uppercase tracking-tight text-slate-400">Zero Proposals</h4>
-                      <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-2">No active acquisition recommendations found</p>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                <div className="space-y-4">
+                   <div className="space-y-1.5">
+                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-2">Book Title</label>
+                      <input required className="w-full h-12 bg-slate-950/40 border border-slate-800 rounded-2xl px-5 text-sm text-white focus:border-indigo-500/50 outline-none transition-all" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
+                   </div>
+                   <div className="space-y-1.5">
+                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-2">Author</label>
+                      <input required className="w-full h-12 bg-slate-950/40 border border-slate-800 rounded-2xl px-5 text-sm text-white focus:border-indigo-500/50 outline-none transition-all" value={formData.author} onChange={e => setFormData({...formData, author: e.target.value})} />
+                   </div>
+                   <div className="grid grid-cols-2 gap-4">
+                     <div className="space-y-1.5">
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-2">Subject</label>
+                        <input className="w-full h-12 bg-slate-950/40 border border-slate-800 rounded-2xl px-5 text-sm text-white focus:border-indigo-500/50 outline-none transition-all" value={formData.subject} onChange={e => setFormData({...formData, subject: e.target.value})} />
+                     </div>
+                     <div className="space-y-1.5">
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-2">Publisher</label>
+                        <input className="w-full h-12 bg-slate-950/40 border border-slate-800 rounded-2xl px-5 text-sm text-white focus:border-indigo-500/50 outline-none transition-all" value={formData.publisher} onChange={e => setFormData({...formData, publisher: e.target.value})} />
+                     </div>
+                   </div>
+                   <div className="space-y-1.5">
+                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-2">Reason for Recommendation</label>
+                      <textarea required className="w-full h-24 bg-slate-950/40 border border-slate-800 rounded-2xl p-5 text-sm text-white focus:border-indigo-500/50 outline-none transition-all resize-none" value={formData.reason} onChange={e => setFormData({...formData, reason: e.target.value})} />
+                   </div>
+                </div>
+                
+                <div className="pt-2">
+                   <button disabled={submitting} type="submit" className="w-full h-14 rounded-2xl bg-indigo-600 text-white text-xs font-black uppercase tracking-[0.2em] hover:bg-indigo-500 transition-all shadow-2xl shadow-indigo-600/20 flex items-center justify-center gap-3">
+                      {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                      Submit Request
+                   </button>
+                </div>
+             </form>
+          </Card>
         </div>
-      </Card>
+
+        {/* Right Column: List */}
+        <div className="lg:col-span-7">
+          <div className="grid grid-cols-1 gap-4">
+             {recommendations.map(r => (
+               <Card key={r._id} style={cardStyle} className="p-6 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-4 group hover:border-slate-700 transition-all">
+                  <div className="flex items-center gap-4 flex-1">
+                     <div className="w-12 h-12 rounded-xl bg-slate-800/50 border border-slate-700/50 flex items-center justify-center text-slate-500 group-hover:text-indigo-400 group-hover:bg-indigo-500/10 transition-all">
+                        <BookOpen className="w-5 h-5" />
+                     </div>
+                     <div>
+                        <h3 className="text-sm font-black text-white uppercase tracking-tight">{r.title}</h3>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase mt-0.5">{r.author} {r.publisher ? `• ${r.publisher}` : ''}</p>
+                     </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-6">
+                     <div className="text-center min-w-[80px]">
+                        <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-1">State</p>
+                        <Badge type={r.status === 'Approved' ? 'available' : r.status === 'Rejected' ? 'overdue' : 'primary'}>{r.status.toUpperCase()}</Badge>
+                     </div>
+                  </div>
+               </Card>
+             ))}
+             {recommendations.length === 0 && !loading && (
+               <div className="py-20 text-center space-y-4 opacity-30 border-2 border-dashed border-slate-800 rounded-[3rem]">
+                  <List className="w-10 h-10 text-slate-500 mx-auto" />
+                  <p className="text-[10px] font-black text-white uppercase tracking-widest">No requests submitted yet</p>
+               </div>
+             )}
+             {loading && (
+               <div className="py-20 flex justify-center opacity-50">
+                  <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+               </div>
+             )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

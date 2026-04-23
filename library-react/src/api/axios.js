@@ -7,7 +7,7 @@ const api = axios.create({
   }
 });
 
-// Request interceptor for adding auth token
+// Request interceptor — attach real JWT from localStorage
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -16,20 +16,21 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Response interceptor for handling common errors
+// Response interceptor — handle 401 Unauthorized globally
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Unauthorized - clear session
+      // Token is invalid or expired — clear session and redirect to login
       localStorage.removeItem('token');
       localStorage.removeItem('session');
-      // We could also trigger a redirect to login here if we had access to history
+      // Only redirect if not already on the login page
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

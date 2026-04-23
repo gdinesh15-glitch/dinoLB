@@ -15,6 +15,7 @@ export const ThemeProvider = ({ children }) => {
     // Remove all previous theme classes
     const themes = ['theme-light', 'theme-dark', 'theme-midnight', 'theme-forest', 'dark'];
     themes.forEach(t => root.classList.remove(t));
+    document.body.classList.remove('lm');
     
     // Apply new theme class
     root.classList.add(`theme-${theme}`);
@@ -22,6 +23,10 @@ export const ThemeProvider = ({ children }) => {
     // Legacy support for tailwind 'dark' class if needed
     if (theme === 'dark' || theme === 'midnight' || theme === 'forest') {
       root.classList.add('dark');
+    }
+    
+    if (theme === 'light') {
+      document.body.classList.add('lm');
     }
   }, [theme]);
 

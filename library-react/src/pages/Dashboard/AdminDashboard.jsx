@@ -15,6 +15,7 @@ import Reports from '../Admin/Reports';
 import AuditLogs from '../Admin/AuditLogs';
 import SystemConfig from '../Admin/SystemConfig';
 import SettingsPage from './Settings';
+import Profile from './Profile';
 
 const AdminDashboard = () => {
   const adminSidebar = [
@@ -41,6 +42,14 @@ const AdminDashboard = () => {
         { to: '/admin/browse', icon: 'fa-search', label: 'Browse Books' },
         { to: '/admin/donations', icon: 'fa-hand-holding-heart', label: 'Donations' },
       ]
+    },
+    {
+      title: 'REPORTS & SETTINGS',
+      links: [
+        { to: '/admin/activity', icon: 'fa-history', label: 'Activity Log' },
+        { to: '/admin/profile', icon: 'fa-user-circle', label: 'Profile' },
+        { to: '/admin/settings', icon: 'fa-cog', label: 'Settings' },
+      ]
     }
   ];
 
@@ -62,8 +71,10 @@ const AdminDashboard = () => {
         <Route path="donations" element={<Donations />} />
         <Route path="reports" element={<Reports />} />
         <Route path="audit" element={<AuditLogs />} />
+        <Route path="activity" element={<AuditLogs />} />
         <Route path="config" element={<SystemConfig />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="profile" element={<Profile />} />
       </Routes>
     </DashboardLayout>
   );

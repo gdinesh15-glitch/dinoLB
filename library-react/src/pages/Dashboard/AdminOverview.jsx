@@ -1,231 +1,218 @@
 import React, { useState, useEffect } from 'react';
-import { DB, timeAgo } from '../../utils/db';
 import userService from '../../api/services/userService';
 import { Link } from 'react-router-dom';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
+/* ── Animated Counter ────────────────────────────────────────────── */
+const AnimNum = ({ value, duration = 1200 }) => {
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    const n = typeof value === 'number' ? value : 0;
+    if (n === 0) { setDisplay(0); return; }
+    let start = 0;
+    const step = Math.max(1, Math.ceil(n / (duration / 16)));
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= n) { setDisplay(n); clearInterval(timer); }
+      else setDisplay(start);
+    }, 16);
+    return () => clearInterval(timer);
+  }, [value, duration]);
+  return <>{display}</>;
+};
+
+/* ── Time ago helper ─────────────────────────────────────────────── */
+const timeAgo = (ts) => {
+  if (!ts) return '';
+  const diff = Date.now() - new Date(ts).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+};
+
+/* ══ AdminOverview ═══════════════════════════════════════════════ */
 const AdminOverview = () => {
-  const [stats, setStats] = useState({ librarians: 0, faculty: 0, students: 0, books: 0, issued: 0, donations: 0 });
-  const [activities, setActivities] = useState([]);
+  const [stats, setStats] = useState({
+    students: 0, faculty: 0, librarians: 0, books: 0,
+    issued: 0, overdue: 0, availableBooks: 0, donations: 0,
+    categories: [], recentActivity: [], weeklyData: []
+  });
   const [loading, setLoading] = useState(true);
-
-  // Mock data for the chart
-  const activityData = [
-    { name: 'Mon', usage: 400, newUsers: 24 },
-    { name: 'Tue', usage: 300, newUsers: 13 },
-    { name: 'Wed', usage: 550, newUsers: 45 },
-    { name: 'Thu', usage: 450, newUsers: 32 },
-    { name: 'Fri', usage: 700, newUsers: 60 },
-    { name: 'Sat', usage: 800, newUsers: 85 },
-    { name: 'Sun', usage: 600, newUsers: 40 },
-  ];
 
   useEffect(() => {
     const fetchStats = async () => {
       setLoading(true);
       const res = await userService.getStats();
-      if (res.success) {
-        setStats(res.data);
-      }
-      
-      const localActivities = DB.get('activity') || [];
-      setActivities(localActivities.slice(0, 6));
+      if (res.success) setStats(res.data);
       setLoading(false);
     };
-
     fetchStats();
   }, []);
 
-  return (
-    <div className="sec active" id="adminDashboardContent" style={{ animation: 'fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)', paddingBottom: '40px' }}>
-      
-      {/* Hero Banner */}
-      <div style={{ 
-        position: 'relative', overflow: 'hidden', padding: '40px', borderRadius: '24px', 
-        background: 'linear-gradient(135deg, rgba(20,15,35,0.9), rgba(15,10,25,0.95))', 
-        border: '1px solid rgba(255,255,255,0.05)', marginBottom: '32px', boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '24px'
-      }}>
-        {/* Decorative background glows */}
-        <div style={{ position: 'absolute', top: '-50%', left: '-10%', width: '300px', height: '300px', background: 'var(--portal-accent)', filter: 'blur(100px)', opacity: 0.15, borderRadius: '50%', pointerEvents: 'none' }}></div>
-        <div style={{ position: 'absolute', bottom: '-50%', right: '-10%', width: '400px', height: '400px', background: '#8b5cf6', filter: 'blur(120px)', opacity: 0.1, borderRadius: '50%', pointerEvents: 'none' }}></div>
+  const card = { background: 'rgba(15,23,42,0.7)', border: '1px solid rgba(51,65,85,0.6)', backdropFilter: 'blur(20px)' };
 
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <h2 style={{ fontSize: '32px', fontWeight: '900', color: '#fff', marginBottom: '8px', letterSpacing: '-0.02em' }}>
-            System Intelligence
-          </h2>
-          <p style={{ fontSize: '13px', color: 'var(--t2)', textTransform: 'uppercase', letterSpacing: '0.15em', fontWeight: '800' }}>
-            VEMU Comprehensive Admin Control
-          </p>
-        </div>
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: '16px' }}>
-          <div style={{ padding: '12px 20px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '16px', color: '#10b981', fontSize: '12px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 0 20px rgba(16, 185, 129, 0.1)' }}>
-            <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 12px #10b981', animation: 'pulse 2s infinite' }}></span>
+  const statCards = [
+    { label: 'Total Students', value: stats.students, icon: 'fa-user-graduate', color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+    { label: 'Total Books', value: stats.books, icon: 'fa-book', color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
+    { label: 'Active Loans', value: stats.issued, icon: 'fa-hand-holding-heart', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
+    { label: 'Faculty Members', value: stats.faculty, icon: 'fa-chalkboard-teacher', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)' },
+    { label: 'Librarians', value: stats.librarians, icon: 'fa-user-tie', color: '#3b82f6', bg: 'rgba(59,130,246,0.12)' },
+    { label: 'Available Copies', value: stats.availableBooks, icon: 'fa-book-open', color: '#06b6d4', bg: 'rgba(6,182,212,0.12)' },
+  ];
+
+  const quickActions = [
+    { to: '/admin/add-student', icon: 'fa-user-plus', label: 'Add Student', color: '#ef4444' },
+    { to: '/admin/books', icon: 'fa-book-medical', label: 'New Asset', color: '#10b981' },
+    { to: '/admin/users', icon: 'fa-users-cog', label: 'Manage Users', color: '#8b5cf6' },
+    { to: '/admin/add-faculty', icon: 'fa-chalkboard-teacher', label: 'Add Faculty', color: '#f59e0b' },
+  ];
+
+  return (
+    <div className="min-h-screen w-full p-4 md:p-6 space-y-6" style={{ background: 'transparent' }}>
+
+      {/* ── Hero Banner ────────────────────────────────────────── */}
+      <div style={{ position: 'relative', overflow: 'hidden', padding: '36px 40px', borderRadius: '20px', ...card }}>
+        <div style={{ position: 'absolute', top: '-50%', left: '-10%', width: '300px', height: '300px', background: '#6366f1', filter: 'blur(100px)', opacity: 0.12, borderRadius: '50%', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: '-50%', right: '-10%', width: '400px', height: '400px', background: '#8b5cf6', filter: 'blur(120px)', opacity: 0.08, borderRadius: '50%', pointerEvents: 'none' }} />
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <h2 style={{ fontSize: '28px', fontWeight: '900', color: '#fff', marginBottom: '6px' }}>System Intelligence</h2>
+            <p style={{ fontSize: '12px', color: 'rgba(148,163,184,0.7)', textTransform: 'uppercase', letterSpacing: '0.15em', fontWeight: '700' }}>
+              VEMU Library — Live Dashboard ({loading ? 'loading…' : 'synced'})
+            </p>
+          </div>
+          <div style={{ padding: '10px 18px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '14px', color: '#10b981', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px #10b981' }} />
             All Systems Operational
           </div>
         </div>
       </div>
 
-      {/* Stats Row using native .stat-card */}
-      <div className="dash-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '24px', marginBottom: '32px' }}>
-        
-        <div className="stat-card" style={{ '--sc-color': 'var(--portal-accent)', padding: '28px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '24px', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(220, 38, 38, 0.05), transparent)', pointerEvents: 'none' }}></div>
-            <div className="sc-icon" style={{ background: 'rgba(220, 38, 38, 0.1)', color: '#dc2626', width: '56px', height: '56px', fontSize: '24px', marginBottom: '20px', boxShadow: '0 8px 24px rgba(220, 38, 38, 0.15)' }}><i className="fas fa-users"></i></div>
-            <div className="sc-num" style={{ fontSize: '42px', fontWeight: '900', letterSpacing: '-0.03em', color: '#fff' }}>{stats.students}</div>
-            <div className="sc-label" style={{ fontSize: '13px', marginTop: '8px', color: 'var(--t2)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Students</div>
-            <div className="sc-bg" style={{ fontSize: '100px', right: '-20px', bottom: '-20px', opacity: 0.03 }}><i className="fas fa-users"></i></div>
+      {/* ── Stats Grid ─────────────────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+        {statCards.map((s, i) => (
+          <div key={i} className="rounded-2xl p-6 relative overflow-hidden" style={card}>
+            <div style={{ position: 'absolute', bottom: '-20px', right: '-20px', fontSize: '80px', opacity: 0.03, color: s.color, pointerEvents: 'none' }}>
+              <i className={`fas ${s.icon}`} />
+            </div>
+            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px', boxShadow: `0 6px 20px ${s.bg}` }}>
+              <i className={`fas ${s.icon}`} style={{ color: s.color, fontSize: '20px' }} />
+            </div>
+            <div style={{ fontSize: '36px', fontWeight: '900', color: '#fff', letterSpacing: '-0.02em', lineHeight: 1 }}>
+              {loading ? <span style={{ opacity: 0.3 }}>—</span> : <AnimNum value={s.value} />}
+            </div>
+            <div style={{ fontSize: '11px', marginTop: '8px', color: 'rgba(148,163,184,0.7)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Charts Row ─────────────────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '20px' }}>
+        {/* Weekly Activity Chart */}
+        <div className="rounded-2xl p-6" style={card}>
+          <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '20px' }}>
+            <i className="fas fa-chart-line" style={{ color: '#8b5cf6', marginRight: '10px' }} />
+            Weekly User Registrations
+          </h3>
+          <div style={{ height: '240px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={stats.weeklyData?.length ? stats.weeklyData : [{ name: '-', newUsers: 0 }]} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="gNew" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                <XAxis dataKey="name" stroke="rgba(148,163,184,0.5)" fontSize={11} tickLine={false} axisLine={false} />
+                <YAxis stroke="rgba(148,163,184,0.5)" fontSize={11} tickLine={false} axisLine={false} allowDecimals={false} />
+                <Tooltip contentStyle={{ background: 'rgba(15,10,25,0.95)', border: '1px solid rgba(51,65,85,0.6)', borderRadius: '10px', color: '#fff', fontSize: '12px' }} />
+                <Area type="monotone" dataKey="newUsers" name="New Users" stroke="#8b5cf6" strokeWidth={2.5} fillOpacity={1} fill="url(#gNew)" activeDot={{ r: 5, fill: '#8b5cf6', stroke: '#fff', strokeWidth: 2 }} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
-        <div className="stat-card" style={{ '--sc-color': '#10b981', padding: '28px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '24px', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.05), transparent)', pointerEvents: 'none' }}></div>
-            <div className="sc-icon" style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', width: '56px', height: '56px', fontSize: '24px', marginBottom: '20px', boxShadow: '0 8px 24px rgba(16,185,129, 0.15)' }}><i className="fas fa-book"></i></div>
-            <div className="sc-num" style={{ fontSize: '42px', fontWeight: '900', letterSpacing: '-0.03em', color: '#fff' }}>{stats.books}</div>
-            <div className="sc-label" style={{ fontSize: '13px', marginTop: '8px', color: 'var(--t2)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Books</div>
-            <div className="sc-bg" style={{ fontSize: '100px', right: '-20px', bottom: '-20px', opacity: 0.03 }}><i className="fas fa-book"></i></div>
-        </div>
-
-        <div className="stat-card" style={{ '--sc-color': '#f59e0b', padding: '28px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '24px', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.05), transparent)', pointerEvents: 'none' }}></div>
-            <div className="sc-icon" style={{ background: 'rgba(245,158,11,0.1)', color: '#f59e0b', width: '56px', height: '56px', fontSize: '24px', marginBottom: '20px', boxShadow: '0 8px 24px rgba(245,158,11, 0.15)' }}><i className="fas fa-hand-holding-heart"></i></div>
-            <div className="sc-num" style={{ fontSize: '42px', fontWeight: '900', letterSpacing: '-0.03em', color: '#fff' }}>{stats.issued}</div>
-            <div className="sc-label" style={{ fontSize: '13px', marginTop: '8px', color: 'var(--t2)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Active Loans</div>
-            <div className="sc-bg" style={{ fontSize: '100px', right: '-20px', bottom: '-20px', opacity: 0.03 }}><i className="fas fa-hand-holding-heart"></i></div>
-        </div>
-
-        <div className="stat-card" style={{ '--sc-color': '#8b5cf6', padding: '28px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '24px', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05), transparent)', pointerEvents: 'none' }}></div>
-            <div className="sc-icon" style={{ background: 'rgba(139,92,246,0.1)', color: '#8b5cf6', width: '56px', height: '56px', fontSize: '24px', marginBottom: '20px', boxShadow: '0 8px 24px rgba(139,92,246, 0.15)' }}><i className="fas fa-chalkboard-teacher"></i></div>
-            <div className="sc-num" style={{ fontSize: '42px', fontWeight: '900', letterSpacing: '-0.03em', color: '#fff' }}>{stats.faculty}</div>
-            <div className="sc-label" style={{ fontSize: '13px', marginTop: '8px', color: 'var(--t2)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Faculty Members</div>
-            <div className="sc-bg" style={{ fontSize: '100px', right: '-20px', bottom: '-20px', opacity: 0.03 }}><i className="fas fa-chalkboard-teacher"></i></div>
+        {/* Book Categories Chart */}
+        <div className="rounded-2xl p-6" style={card}>
+          <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '20px' }}>
+            <i className="fas fa-layer-group" style={{ color: '#3b82f6', marginRight: '10px' }} />
+            Book Categories
+          </h3>
+          <div style={{ height: '240px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={stats.categories?.length ? stats.categories : [{ name: 'No data', count: 0 }]} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                <XAxis dataKey="name" stroke="rgba(148,163,184,0.5)" fontSize={10} tickLine={false} axisLine={false} angle={-15} textAnchor="end" height={50} />
+                <YAxis stroke="rgba(148,163,184,0.5)" fontSize={11} tickLine={false} axisLine={false} allowDecimals={false} />
+                <Tooltip contentStyle={{ background: 'rgba(15,10,25,0.95)', border: '1px solid rgba(51,65,85,0.6)', borderRadius: '10px', color: '#fff', fontSize: '12px' }} />
+                <Bar dataKey="count" name="Books" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={28} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
-      {/* Analytics Chart */}
-      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '24px', padding: '32px', boxShadow: 'var(--shadow-sm)', marginBottom: '32px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <div>
-            <h3 style={{ fontSize: '18px', fontWeight: '900', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              <i className="fas fa-chart-line" style={{ color: '#3b82f6', marginRight: '12px' }}></i> Traffic & Engagement Analytics
-            </h3>
-            <p style={{ fontSize: '12px', color: 'var(--t2)', fontWeight: '700', marginTop: '6px' }}>Network requests and unique sign-ins over the past 7 days</p>
-          </div>
-        </div>
-        <div style={{ height: '300px', width: '100%' }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={activityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id="colorUsage" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
-                </linearGradient>
-                <linearGradient id="colorNew" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-              <XAxis dataKey="name" stroke="var(--t2)" fontSize={12} tickLine={false} axisLine={false} dy={10} />
-              <YAxis stroke="var(--t2)" fontSize={12} tickLine={false} axisLine={false} />
-              <Tooltip 
-                contentStyle={{ background: 'rgba(15,10,25,0.95)', border: '1px solid var(--border)', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', color: '#fff' }}
-                itemStyle={{ fontWeight: '800' }}
-              />
-              <Area type="monotone" dataKey="usage" stroke="#8b5cf6" strokeWidth={3} fillOpacity={1} fill="url(#colorUsage)" activeDot={{ r: 6, fill: '#8b5cf6', stroke: '#fff', strokeWidth: 2 }} />
-              <Area type="monotone" dataKey="newUsers" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorNew)" activeDot={{ r: 6, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+      {/* ── Bottom Row: Quick Actions + Activity ───────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '20px' }}>
 
-      {/* Main Content Split */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '32px' }}>
-        
-        {/* Quick Actions Panel */}
-        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '24px', padding: '32px', boxShadow: 'var(--shadow-sm)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '900', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              <i className="fas fa-bolt" style={{ color: 'var(--portal-accent)', marginRight: '12px' }}></i> Quick Actions
-            </h3>
-          </div>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
-            <Link to="/admin/add-student" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 20px', background: 'var(--card2)', border: '1px solid var(--border)', borderRadius: '20px', gap: '16px', color: 'var(--t1)', textDecoration: 'none', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', textAlign: 'center', boxShadow: 'inset 0 0 0 1px transparent' }}
-                  onMouseOver={(e) => { e.currentTarget.style.borderColor = '#dc2626'; e.currentTarget.style.background = 'rgba(220,38,38,0.02)'; e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 10px 30px rgba(220,38,38,0.1)' }}
-                  onMouseOut={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--card2)'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}>
-               <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'linear-gradient(135deg, rgba(220, 38, 38, 0.15), rgba(220, 38, 38, 0.05))', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', boxShadow: '0 4px 12px rgba(220,38,38,0.2)' }}>
-                 <i className="fas fa-user-plus"></i>
-               </div>
-               <span style={{ fontSize: '13px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Add Student</span>
-            </Link>
-
-            <Link to="/admin/books" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 20px', background: 'var(--card2)', border: '1px solid var(--border)', borderRadius: '20px', gap: '16px', color: 'var(--t1)', textDecoration: 'none', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', textAlign: 'center', boxShadow: 'inset 0 0 0 1px transparent' }}
-                  onMouseOver={(e) => { e.currentTarget.style.borderColor = '#10b981'; e.currentTarget.style.background = 'rgba(16,185,129,0.02)'; e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 10px 30px rgba(16,185,129,0.1)' }}
-                  onMouseOut={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--card2)'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}>
-               <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05))', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', boxShadow: '0 4px 12px rgba(16,185,129,0.2)' }}>
-                 <i className="fas fa-book-medical"></i>
-               </div>
-               <span style={{ fontSize: '13px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>New Asset</span>
-            </Link>
-
-            <Link to="/admin/users" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 20px', background: 'var(--card2)', border: '1px solid var(--border)', borderRadius: '20px', gap: '16px', color: 'var(--t1)', textDecoration: 'none', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', textAlign: 'center', boxShadow: 'inset 0 0 0 1px transparent' }}
-                  onMouseOver={(e) => { e.currentTarget.style.borderColor = '#8b5cf6'; e.currentTarget.style.background = 'rgba(139,92,246,0.02)'; e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 10px 30px rgba(139,92,246,0.1)' }}
-                  onMouseOut={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--card2)'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}>
-               <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(139,92,246,0.05))', color: '#8b5cf6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', boxShadow: '0 4px 12px rgba(139,92,246,0.2)' }}>
-                 <i className="fas fa-users-cog"></i>
-               </div>
-               <span style={{ fontSize: '13px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Manage Users</span>
-            </Link>
-
-            <Link to="/admin/reports" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 20px', background: 'var(--card2)', border: '1px solid var(--border)', borderRadius: '20px', gap: '16px', color: 'var(--t1)', textDecoration: 'none', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', textAlign: 'center', boxShadow: 'inset 0 0 0 1px transparent' }}
-                  onMouseOver={(e) => { e.currentTarget.style.borderColor = '#f59e0b'; e.currentTarget.style.background = 'rgba(245,158,11,0.02)'; e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 10px 30px rgba(245,158,11,0.1)' }}
-                  onMouseOut={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--card2)'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none' }}>
-               <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.05))', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', boxShadow: '0 4px 12px rgba(245,158,11,0.2)' }}>
-                 <i className="fas fa-chart-pie"></i>
-               </div>
-               <span style={{ fontSize: '13px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Reports</span>
-            </Link>
-          </div>
-        </div>
-
-        {/* Recent Activity Panel */}
-        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '24px', padding: '32px', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-             <h3 style={{ fontSize: '18px', fontWeight: '900', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-               <i className="fas fa-history" style={{ color: '#ec4899', marginRight: '12px' }}></i> Activity Feed
-             </h3>
-             <button style={{ background: 'var(--card2)', border: '1px solid var(--border)', color: 'var(--t2)', cursor: 'pointer', padding: '8px 12px', borderRadius: '12px', transition: 'all 0.2s' }} onMouseOver={(e) => {e.currentTarget.style.background='var(--border)'; e.currentTarget.style.color='#fff'}} onMouseOut={(e) => {e.currentTarget.style.background='var(--card2)'; e.currentTarget.style.color='var(--t2)'}}><i className="fas fa-ellipsis-h"></i></button>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
-            {activities.length > 0 ? activities.map((a, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '20px', padding: '20px', background: 'var(--bg2)', borderRadius: '20px', border: '1px solid var(--border)', transition: 'all 0.2s' }}
-                   onMouseOver={(e) => { e.currentTarget.style.borderColor = '#ec4899'; e.currentTarget.style.transform = 'translateX(6px)'; e.currentTarget.style.background = 'var(--card)' }}
-                   onMouseOut={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.background = 'var(--bg2)' }}>
-                <div style={{ width: '48px', height: '48px', flexShrink: 0, borderRadius: '14px', background: 'var(--card2)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ec4899', fontSize: '20px' }}>
-                   <i className={a.text.includes('logged') ? "fas fa-sign-in-alt" : "fas fa-check-circle"}></i>
+        {/* Quick Actions */}
+        <div className="rounded-2xl p-6" style={card}>
+          <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '20px' }}>
+            <i className="fas fa-bolt" style={{ color: '#f59e0b', marginRight: '10px' }} />
+            Quick Actions
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px' }}>
+            {quickActions.map((q, i) => (
+              <Link key={i} to={q.to} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 16px', borderRadius: '16px', gap: '12px', textDecoration: 'none', color: '#e2e8f0', transition: 'all 0.25s', background: 'rgba(15,23,42,0.5)', border: '1px solid rgba(51,65,85,0.5)', textAlign: 'center' }}
+                onMouseOver={e => { e.currentTarget.style.borderColor = q.color; e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = `0 8px 24px ${q.color}20`; }}
+                onMouseOut={e => { e.currentTarget.style.borderColor = 'rgba(51,65,85,0.5)'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: `${q.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', color: q.color }}>
+                  <i className={`fas ${q.icon}`} />
                 </div>
-                <div style={{ flex: 1 }}>
-                   <p style={{ fontSize: '15px', color: '#fff', fontWeight: '700', lineHeight: '1.5' }}>{a.text}</p>
-                   <div style={{ fontSize: '11px', color: 'var(--t2)', display: 'flex', gap: '16px', marginTop: '8px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><i className="fas fa-user" style={{ fontSize: '10px' }}></i> {a.userId || 'System'}</span>
-                      <span style={{ color: '#ec4899', display: 'flex', alignItems: 'center', gap: '6px' }}><i className="fas fa-clock" style={{ fontSize: '10px' }}></i> {timeAgo(a.ts)}</span>
-                   </div>
+                <span style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{q.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Activity Feed */}
+        <div className="rounded-2xl p-6 flex flex-col" style={card}>
+          <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '20px' }}>
+            <i className="fas fa-history" style={{ color: '#ec4899', marginRight: '10px' }} />
+            Recent Activity
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, overflowY: 'auto' }}>
+            {stats.recentActivity?.length > 0 ? stats.recentActivity.map((a, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', padding: '14px 16px', borderRadius: '14px', border: '1px solid rgba(51,65,85,0.4)', background: 'rgba(15,23,42,0.4)', transition: 'all 0.2s' }}
+                onMouseOver={e => { e.currentTarget.style.borderColor = 'rgba(236,72,153,0.3)'; e.currentTarget.style.transform = 'translateX(4px)'; }}
+                onMouseOut={e => { e.currentTarget.style.borderColor = 'rgba(51,65,85,0.4)'; e.currentTarget.style.transform = 'none'; }}>
+                <div style={{ width: '40px', height: '40px', flexShrink: 0, borderRadius: '12px', background: 'rgba(236,72,153,0.1)', border: '1px solid rgba(236,72,153,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ec4899', fontSize: '16px' }}>
+                  <i className="fas fa-user-plus" />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: '13px', color: '#fff', fontWeight: '600', lineHeight: 1.4 }}>{a.text}</p>
+                  <div style={{ fontSize: '10px', color: 'rgba(148,163,184,0.6)', display: 'flex', gap: '12px', marginTop: '5px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    <span><i className="fas fa-id-badge" style={{ fontSize: '9px', marginRight: '4px' }} />{a.userId}</span>
+                    <span style={{ color: 'rgba(236,72,153,0.7)' }}><i className="fas fa-clock" style={{ fontSize: '9px', marginRight: '4px' }} />{timeAgo(a.ts)}</span>
+                  </div>
                 </div>
               </div>
             )) : (
-              <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--t2)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', background: 'var(--card2)', borderRadius: '20px', border: '1px dashed var(--border)' }}>
-                 <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--bg2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                   <i className="fas fa-inbox" style={{ fontSize: '28px', opacity: 0.5 }}></i>
-                 </div>
-                 <span style={{ fontSize: '13px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.1em' }}>No recent activity to report</span>
+              <div style={{ padding: '40px', textAlign: 'center', color: 'rgba(100,116,139,0.6)', borderRadius: '14px', border: '1px dashed rgba(51,65,85,0.5)' }}>
+                <i className="fas fa-inbox" style={{ fontSize: '24px', opacity: 0.3, marginBottom: '10px', display: 'block' }} />
+                <span style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase' }}>No recent activity</span>
               </div>
             )}
           </div>
         </div>
-
       </div>
+
+      <div className="h-6" />
     </div>
   );
 };

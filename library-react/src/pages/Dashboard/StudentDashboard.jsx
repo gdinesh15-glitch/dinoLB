@@ -12,6 +12,8 @@ import Wishlist from '../Student/Wishlist';
 import StudentFines from '../Student/StudentFines';
 import DigitalLibrary from '../Student/DigitalLibrary';
 import SettingsPage from './Settings';
+import AuditLogs from '../Admin/AuditLogs';
+import Profile from './Profile';
 
 import RequestBook from '../Student/RequestBook';
 
@@ -32,6 +34,14 @@ const StudentDashboard = () => {
         { to: '/student/fines', icon: IndianRupee, label: 'Fines & Payments' },
         { to: '/student/digital', icon: Smartphone, label: 'Digital Library' },
       ]
+    },
+    {
+      title: 'REPORTS & SETTINGS',
+      links: [
+        { to: '/student/activity', icon: 'fa-history', label: 'Activity Log' },
+        { to: '/student/profile', icon: 'fa-user-circle', label: 'Profile' },
+        { to: '/student/settings', icon: 'fa-cog', label: 'Settings' },
+      ]
     }
   ];
 
@@ -49,6 +59,8 @@ const StudentDashboard = () => {
         <Route path="fines" element={<StudentFines />} />
         <Route path="digital" element={<DigitalLibrary />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="activity" element={<AuditLogs />} />
+        <Route path="profile" element={<Profile />} />
       </Routes>
     </DashboardLayout>
   );

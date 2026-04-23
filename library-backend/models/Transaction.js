@@ -24,9 +24,10 @@ const transactionSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Issued', 'Returned', 'Overdue'],
+        enum: ['Issued', 'Returned', 'Overdue', 'Reserved'],
         default: 'Issued'
     },
+    notes: { type: String },
     fineAmount: {
         type: Number,
         default: 0

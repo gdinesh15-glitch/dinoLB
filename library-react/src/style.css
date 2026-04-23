@@ -43,9 +43,8 @@
     --pink: #f472b6;
     /* Text */
     --t1: #f0ecff;
-    --t2: #a89cc0;
     --t3: #5e5278;
-    --sidebar: 240px;
+    --sidebar: 280px;
     --radius: 16px;
     --rsm: 10px;
     --shadow: 0 10px 40px rgba(0, 0, 0, .55);
@@ -1549,8 +1548,11 @@ body.lm .topbar {
     padding: 32px 40px;
     flex: 1;
     width: 100%;
-    max-width: 1600px;
-    margin: 0 auto;
+    max-width: 100%;
+    margin: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: calc(100vh - 72px);
 }
 
 .sec {

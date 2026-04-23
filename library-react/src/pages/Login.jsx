@@ -36,7 +36,7 @@ const Login = () => {
     if (!id || !password) return alert('Please enter both ID and Password');
     setIsLoading(true);
     try {
-      const result = await login(id, password);
+      const result = await login(id.trim(), password, role.toLowerCase());
       if (result.success) {
         const userRole = result.user.role?.toLowerCase();
         navigate(`/${userRole}`);
@@ -174,17 +174,17 @@ const Login = () => {
               <div className="demo-box" style={{ marginTop: '14px' }}>
                   <div className="demo-label"><i className="fas fa-info-circle"></i> Quick Login (click to fill)</div>
                   <div className="demo-items">
-                      <div className="demo-item" onClick={() => handleQuickDemo('admin', 'ADMIN01', 'admin123')}>
-                        <i className="fas fa-user-shield"></i><strong>Admin:</strong>&nbsp; ADMIN01 &nbsp;/&nbsp; admin123
+                      <div className="demo-item" onClick={() => handleQuickDemo('admin', 'admin', 'admin123')}>
+                        <i className="fas fa-user-shield"></i><strong>Admin:</strong>&nbsp; admin &nbsp;/&nbsp; admin123
                       </div>
-                      <div className="demo-item" onClick={() => handleQuickDemo('librarian', 'LIB001', 'lib123')}>
-                        <i className="fas fa-user-tie"></i><strong>Librarian:</strong>&nbsp; LIB001 &nbsp;/&nbsp; lib123
+                      <div className="demo-item" onClick={() => handleQuickDemo('librarian', 'LIB-001', 'password123')}>
+                        <i className="fas fa-user-tie"></i><strong>Librarian:</strong>&nbsp; LIB-001 &nbsp;/&nbsp; password123
                       </div>
-                      <div className="demo-item" onClick={() => handleQuickDemo('faculty', 'FAC001', 'fac123')}>
-                        <i className="fas fa-chalkboard-teacher"></i><strong>Faculty:</strong>&nbsp; FAC001 &nbsp;/&nbsp; fac123
+                      <div className="demo-item" onClick={() => handleQuickDemo('faculty', 'FAC-001', 'password123')}>
+                        <i className="fas fa-chalkboard-teacher"></i><strong>Faculty:</strong>&nbsp; FAC-001 &nbsp;/&nbsp; password123
                       </div>
-                      <div className="demo-item" onClick={() => handleQuickDemo('student', 'STU001', 'stu123')}>
-                        <i className="fas fa-user-graduate"></i><strong>Student:</strong>&nbsp; STU001 &nbsp;/&nbsp; stu123
+                      <div className="demo-item" onClick={() => handleQuickDemo('student', 'STU-001', 'password123')}>
+                        <i className="fas fa-user-graduate"></i><strong>Student:</strong>&nbsp; STU-001 &nbsp;/&nbsp; password123
                       </div>
                   </div>
               </div>
