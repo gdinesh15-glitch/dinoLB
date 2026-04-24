@@ -49,27 +49,27 @@ const About = () => {
               <section className="about-section">
                   <h2>Benefits of Our Library Management System</h2>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginTop: '20px' }}>
-                      <div style={{ background: '#f8f9ff', padding: '20px', borderRadius: '8px', borderLeft: '4px solid #667eea' }}>
+                      <div className="benefit-card" style={{ background: '#f8f9ff', padding: '20px', borderRadius: '8px', borderLeft: '4px solid #667eea' }}>
                           <h4 style={{ color: '#667eea', marginBottom: '10px' }}>⚡ Fast Processing</h4>
                           <p>Quick and easy book issue and return process, saving time for both students and librarians.</p>
                       </div>
-                      <div style={{ background: '#f8f9ff', padding: '20px', borderRadius: '8px', borderLeft: '4px solid #764ba2' }}>
+                      <div className="benefit-card" style={{ background: '#f8f9ff', padding: '20px', borderRadius: '8px', borderLeft: '4px solid #764ba2' }}>
                           <h4 style={{ color: '#764ba2', marginBottom: '10px' }}>📊 Better Tracking</h4>
                           <p>Real-time tracking of book availability and borrowing history for informed decisions.</p>
                       </div>
-                      <div style={{ background: '#f8f9ff', padding: '20px', borderRadius: '8px', borderLeft: '4px solid #667eea' }}>
+                      <div className="benefit-card" style={{ background: '#f8f9ff', padding: '20px', borderRadius: '8px', borderLeft: '4px solid #667eea' }}>
                           <h4 style={{ color: '#667eea', marginBottom: '10px' }}>🔒 Secure System</h4>
                           <p>Encrypted login system ensures that student and book data are always secure and protected.</p>
                       </div>
-                      <div style={{ background: '#f8f9ff', padding: '20px', borderRadius: '8px', borderLeft: '4px solid #764ba2' }}>
+                      <div className="benefit-card" style={{ background: '#f8f9ff', padding: '20px', borderRadius: '8px', borderLeft: '4px solid #764ba2' }}>
                           <h4 style={{ color: '#764ba2', marginBottom: '10px' }}>👥 Easy Access</h4>
                           <p>Role-based access control ensures that each user sees only relevant information.</p>
                       </div>
-                      <div style={{ background: '#f8f9ff', padding: '20px', borderRadius: '8px', borderLeft: '4px solid #667eea' }}>
+                      <div className="benefit-card" style={{ background: '#f8f9ff', padding: '20px', borderRadius: '8px', borderLeft: '4px solid #667eea' }}>
                           <h4 style={{ color: '#667eea', marginBottom: '10px' }}>📈 Better Management</h4>
                           <p>Administrators can easily manage books, track circulation, and generate reports.</p>
                       </div>
-                      <div style={{ background: '#f8f9ff', padding: '20px', borderRadius: '8px', borderLeft: '4px solid #764ba2' }}>
+                      <div className="benefit-card" style={{ background: '#f8f9ff', padding: '20px', borderRadius: '8px', borderLeft: '4px solid #764ba2' }}>
                           <h4 style={{ color: '#764ba2', marginBottom: '10px' }}>🎓 Student Support</h4>
                           <p>Students can easily find books, check availability, and manage their borrowing records.</p>
                       </div>

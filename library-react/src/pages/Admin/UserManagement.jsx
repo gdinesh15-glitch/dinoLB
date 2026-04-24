@@ -53,16 +53,16 @@ const inpStyle = { background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(51,
 
 /* ══ Main Component ════════════════════════════════════════════════════════ */
 const UserManagement = ({ defaultRole }) => {
-  const [users, setUsers]       = useState([]);
-  const [filter, setFilter]     = useState('all');
-  const [search, setSearch]     = useState('');
+  const [users, setUsers] = useState([]);
+  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(!!defaultRole);
   const [formRole, setFormRole] = useState(defaultRole || 'Student');
   const [editUser, setEditUser] = useState(null);
-  const [loading, setLoading]   = useState(true);
-  const [saving, setSaving]     = useState(false);
-  const [toast, setToast]       = useState(null);
-  const [page, setPage]         = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [page, setPage] = useState(1);
 
   const notify = (msg, type = 'success') => setToast({ msg, type });
 
@@ -84,12 +84,12 @@ const UserManagement = ({ defaultRole }) => {
     setSaving(true);
     const fd = new FormData(e.target);
     const payload = {
-      userId:     fd.get('regId'),
-      name:       fd.get('name'),
-      email:      fd.get('email'),
-      phone:      fd.get('phone'),
+      userId: fd.get('regId'),
+      name: fd.get('name'),
+      email: fd.get('email'),
+      phone: fd.get('phone'),
       department: fd.get('dept'),
-      role:       formRole,
+      role: formRole,
     };
     if (fd.get('pw')) payload.password = fd.get('pw');
     else if (!editUser) payload.password = 'default123';
@@ -140,7 +140,7 @@ const UserManagement = ({ defaultRole }) => {
   });
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   /* Card style */
   const card = { background: 'rgba(15,23,42,0.7)', border: '1px solid rgba(51,65,85,0.6)', backdropFilter: 'blur(20px)' };
@@ -230,7 +230,7 @@ const UserManagement = ({ defaultRole }) => {
               {formRole === 'Student' && (
                 <Field label="Academic Year">
                   <select name="year" className={inp} style={inpStyle} defaultValue={editUser?.year || '1st Year'}>
-                    {['1st Year','2nd Year','3rd Year','4th Year'].map(y => <option key={y}>{y}</option>)}
+                    {['1st Year', '2nd Year', '3rd Year', '4th Year'].map(y => <option key={y}>{y}</option>)}
                   </select>
                 </Field>
               )}
@@ -259,11 +259,11 @@ const UserManagement = ({ defaultRole }) => {
               <button key={t.key} onClick={() => { setFilter(t.key); setPage(1); }}
                 className="px-4 py-2 rounded-xl text-xs font-bold transition-all"
                 style={filter === t.key
-                  ? { background:'rgba(99,102,241,0.2)', color:'#818cf8', border:'1px solid rgba(99,102,241,0.4)' }
-                  : { background:'transparent', color:'rgba(148,163,184,0.7)', border:'1px solid transparent' }}>
+                  ? { background: 'rgba(99,102,241,0.2)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.4)' }
+                  : { background: 'transparent', color: 'rgba(148,163,184,0.7)', border: '1px solid transparent' }}>
                 {t.label}
                 <span className="ml-1.5 text-[10px] opacity-60">
-                  ({t.key === 'all' ? users.filter(u=>u.role?.toLowerCase()!=='admin').length : users.filter(u=>u.role?.toLowerCase()===t.key).length})
+                  ({t.key === 'all' ? users.filter(u => u.role?.toLowerCase() !== 'admin').length : users.filter(u => u.role?.toLowerCase() === t.key).length})
                 </span>
               </button>
             ))}
@@ -271,12 +271,12 @@ const UserManagement = ({ defaultRole }) => {
           {/* Search + Filter */}
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color:'rgba(148,163,184,0.5)' }} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(148,163,184,0.5)' }} />
               <input className={`${inp} pl-9 w-52`} style={inpStyle} placeholder="Search by name or ID…"
                 value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
             </div>
             <button className="flex items-center gap-2 px-4 h-11 rounded-xl text-xs font-bold transition-all hover:bg-white/5"
-              style={{ border:'1px solid rgba(51,65,85,0.8)', color:'#94a3b8' }}>
+              style={{ border: '1px solid rgba(51,65,85,0.8)', color: '#94a3b8' }}>
               <SlidersHorizontal className="w-4 h-4" /> Filter
             </button>
           </div>
@@ -292,10 +292,10 @@ const UserManagement = ({ defaultRole }) => {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px]">
               <thead>
-                <tr style={{ borderBottom:'1px solid rgba(51,65,85,0.5)' }}>
-                  {['Registry ID','Identity Name','Designation','Contact Node','Current State','Actions'].map((h,i) => (
-                    <th key={i} className={`py-3.5 px-5 text-left text-[10px] font-bold uppercase tracking-widest ${i===5?'text-right':''}`}
-                      style={{ color:'rgba(100,116,139,0.9)' }}>{h}</th>
+                <tr style={{ borderBottom: '1px solid rgba(51,65,85,0.5)' }}>
+                  {['Registry ID', 'Identity Name', 'Designation', 'Contact Node', 'Current State', 'Actions'].map((h, i) => (
+                    <th key={i} className={`py-3.5 px-5 text-left text-[10px] font-bold uppercase tracking-widest ${i === 5 ? 'text-right' : ''}`}
+                      style={{ color: 'rgba(100,116,139,0.9)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -306,9 +306,9 @@ const UserManagement = ({ defaultRole }) => {
                   const Icon = RoleIcon[roleLow] || Shield;
                   return (
                     <tr key={u._id} className="group transition-colors"
-                      style={{ borderBottom:'1px solid rgba(30,41,59,0.5)' }}
-                      onMouseEnter={e=>e.currentTarget.style.background='rgba(99,102,241,0.04)'}
-                      onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                      style={{ borderBottom: '1px solid rgba(30,41,59,0.5)' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(99,102,241,0.04)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                       <td className="py-4 px-5 align-middle">
                         <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-bold ${badgeStyle(rid)}`}>{rid}</span>
                       </td>
@@ -317,33 +317,33 @@ const UserManagement = ({ defaultRole }) => {
                       </td>
                       <td className="py-4 px-5 align-middle">
                         <div className="flex items-center gap-2">
-                          <Icon className="w-4 h-4" style={{ color:'rgba(148,163,184,0.6)' }} />
-                          <span className="text-xs font-bold uppercase tracking-wider" style={{ color:'rgba(148,163,184,0.8)' }}>{u.role}</span>
+                          <Icon className="w-4 h-4" style={{ color: 'rgba(148,163,184,0.6)' }} />
+                          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'rgba(148,163,184,0.8)' }}>{u.role}</span>
                         </div>
                       </td>
                       <td className="py-4 px-5 align-middle">
-                        <div className="text-xs font-medium" style={{ color:'rgba(148,163,184,0.8)' }}>{u.email || '—'}</div>
-                        <div className="text-[10px] font-bold uppercase mt-0.5" style={{ color:'rgba(100,116,139,0.7)' }}>{u.department || ''}</div>
+                        <div className="text-xs font-medium" style={{ color: 'rgba(148,163,184,0.8)' }}>{u.email || '—'}</div>
+                        <div className="text-[10px] font-bold uppercase mt-0.5" style={{ color: 'rgba(100,116,139,0.7)' }}>{u.department || ''}</div>
                       </td>
                       <td className="py-4 px-5 align-middle">
                         <button onClick={() => handleToggle(u)}
                           className="flex items-center gap-2 transition-opacity hover:opacity-80">
-                          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${u.status==='Active'?'bg-emerald-400':'bg-rose-400'}`} />
+                          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${u.status === 'Active' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
                           <span className="text-[10px] font-bold uppercase tracking-wider"
-                            style={{ color: u.status==='Active'?'#34d399':'#f87171' }}>{u.status}</span>
+                            style={{ color: u.status === 'Active' ? '#34d399' : '#f87171' }}>{u.status}</span>
                         </button>
                       </td>
                       <td className="py-4 px-5 align-middle text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button onClick={() => startEdit(u)}
                             className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:bg-indigo-500/20"
-                            style={{ border:'1px solid rgba(51,65,85,0.6)', color:'#64748b' }}
+                            style={{ border: '1px solid rgba(51,65,85,0.6)', color: '#64748b' }}
                             title="Edit">
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
                           <button onClick={() => handleDelete(u)}
                             className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:bg-rose-500/20 hover:text-rose-400"
-                            style={{ border:'1px solid rgba(51,65,85,0.6)', color:'#64748b' }}
+                            style={{ border: '1px solid rgba(51,65,85,0.6)', color: '#64748b' }}
                             title="Delete">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -355,9 +355,9 @@ const UserManagement = ({ defaultRole }) => {
                 {paginated.length === 0 && (
                   <tr>
                     <td colSpan={6} className="py-20 text-center">
-                      <Search className="w-8 h-8 mx-auto mb-3" style={{ color:'rgba(100,116,139,0.5)' }} />
-                      <p className="text-sm font-semibold" style={{ color:'rgba(100,116,139,0.7)' }}>
-                        {search || filter!=='all' ? 'No records match your criteria.' : 'No identities registered yet.'}
+                      <Search className="w-8 h-8 mx-auto mb-3" style={{ color: 'rgba(100,116,139,0.5)' }} />
+                      <p className="text-sm font-semibold" style={{ color: 'rgba(100,116,139,0.7)' }}>
+                        {search || filter !== 'all' ? 'No records match your criteria.' : 'No identities registered yet.'}
                       </p>
                     </td>
                   </tr>
@@ -370,24 +370,24 @@ const UserManagement = ({ defaultRole }) => {
         {/* Pagination */}
         {!loading && filtered.length > 0 && (
           <div className="px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-3"
-            style={{ borderTop:'1px solid rgba(51,65,85,0.5)' }}>
-            <span className="text-xs" style={{ color:'rgba(100,116,139,0.8)' }}>
-              Showing {Math.min((page-1)*PAGE_SIZE+1, filtered.length)} to {Math.min(page*PAGE_SIZE, filtered.length)} of {filtered.length} entries
+            style={{ borderTop: '1px solid rgba(51,65,85,0.5)' }}>
+            <span className="text-xs" style={{ color: 'rgba(100,116,139,0.8)' }}>
+              Showing {Math.min((page - 1) * PAGE_SIZE + 1, filtered.length)} to {Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length} entries
             </span>
             <div className="flex items-center gap-1.5">
-              <button disabled={page===1} onClick={()=>setPage(p=>p-1)}
+              <button disabled={page === 1} onClick={() => setPage(p => p - 1)}
                 className="w-8 h-8 rounded-lg flex items-center justify-center transition-all disabled:opacity-30"
-                style={{ border:'1px solid rgba(51,65,85,0.6)', color:'#64748b' }}>‹</button>
-              {Array.from({length:totalPages},(_,i)=>i+1).map(n=>(
-                <button key={n} onClick={()=>setPage(n)}
+                style={{ border: '1px solid rgba(51,65,85,0.6)', color: '#64748b' }}>‹</button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
+                <button key={n} onClick={() => setPage(n)}
                   className="w-8 h-8 rounded-lg text-xs font-bold transition-all"
-                  style={n===page
-                    ? { background:'rgba(99,102,241,0.25)', color:'#818cf8', border:'1px solid rgba(99,102,241,0.5)' }
-                    : { border:'1px solid rgba(51,65,85,0.6)', color:'#64748b' }}>{n}</button>
+                  style={n === page
+                    ? { background: 'rgba(99,102,241,0.25)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.5)' }
+                    : { border: '1px solid rgba(51,65,85,0.6)', color: '#64748b' }}>{n}</button>
               ))}
-              <button disabled={page===totalPages} onClick={()=>setPage(p=>p+1)}
+              <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)}
                 className="w-8 h-8 rounded-lg flex items-center justify-center transition-all disabled:opacity-30"
-                style={{ border:'1px solid rgba(51,65,85,0.6)', color:'#64748b' }}>›</button>
+                style={{ border: '1px solid rgba(51,65,85,0.6)', color: '#64748b' }}>›</button>
             </div>
           </div>
         )}

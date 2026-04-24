@@ -99,8 +99,7 @@ const DashboardLayout = ({ sidebarGroups, title, subtitle, children }) => {
         <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`} id="sidebar">
           <div className="sb-top">
             <div className="sb-logo">
-              <img src="https://www.vemu.ac.in/assets/images/logo.png" alt="VEMU" onError={(e) => { e.target.style.display='none'; e.target.nextElementSibling.style.display='flex' }} />
-              <div className="sb-logo-fallback" style={{ display: 'none' }}><i className="fas fa-university"></i></div>
+              <div className="sb-logo-fallback" style={{ display: 'flex' }}><i className="fas fa-university"></i></div>
             </div>
             <div className="sb-brand">
               <span className="sb-college">VEMU</span>
@@ -150,7 +149,7 @@ const DashboardLayout = ({ sidebarGroups, title, subtitle, children }) => {
                 <i className="fas fa-bars"></i>
               </button>
               <div className="page-breadcrumb">
-                <img src="https://www.vemu.ac.in/assets/images/logo.png" className="tb-logo" onError={(e) => e.target.style.display='none'} />
+                <i className="fas fa-university tb-logo" style={{ fontSize: '18px', color: 'var(--accent-base)', marginRight: '8px' }}></i>
                 <span id="pageTitle">{title || 'Dashboard'}</span>
               </div>
             </div>
